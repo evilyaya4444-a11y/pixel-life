@@ -1,0 +1,2385 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>像素诗·万物有灵</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', 'Courier New', monospace;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        body {
+            background: #1a0f2a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 0, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, transparent 0%, #1a0f2a 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .game-container {
+            max-width: 1000px;
+            width: 100%;
+            background: #2a1a3a;
+            border: 4px solid #ff00ff;
+            box-shadow: 0 0 0 4px #00ffff, 0 0 20px #ff00ff;
+            padding: 24px;
+            position: relative;
+            z-index: 2;
+            image-rendering: pixelated;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #1a0f2a;
+            border: 4px solid #00ffff;
+            margin-bottom: 24px;
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #ff00ff;
+        }
+        .badge {
+            background: #ff00ff;
+            color: #ffff00;
+            padding: 8px 16px;
+            border: 2px solid #00ffff;
+            font-size: 12px;
+            text-shadow: 1px 1px 0 #000000;
+        }
+        .exp-bar {
+            background: #1a0f2a;
+            height: 16px;
+            width: 140px;
+            border: 2px solid #00ffff;
+            position: relative;
+        }
+        .exp-fill {
+            height: 100%;
+            width: 0%;
+            background: #ffff00;
+            box-shadow: 0 0 10px #ffff00;
+            transition: width 0.3s steps(10);
+        }
+        .stats-panel {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .attrs-panel {
+            flex: 3;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: #1a0f2a;
+            border: 4px solid #ff00ff;
+            padding: 16px;
+        }
+        .memory-panel {
+            flex: 1;
+            min-width: 100px;
+            background: #1a0f2a;
+            border: 4px solid #00ffff;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+        .memory-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(45deg, #ff00ff22, #00ffff22 8px);
+            pointer-events: none;
+        }
+        .attr-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #2a1a3a;
+            padding: 8px;
+            border: 2px solid #00ffff;
+        }
+        .attr-name {
+            color: #ffff00;
+            font-size: 10px;
+            width: 45px;
+            text-shadow: 1px 1px 0 #ff00ff;
+        }
+        .attr-value {
+            color: #00ffff;
+            font-size: 12px;
+            background: #1a0f2a;
+            padding: 4px 8px;
+            border: 2px solid #ff00ff;
+            text-shadow: 1px 1px 0 #ffff00;
+        }
+        .memory-icon {
+            font-size: 20px;
+        }
+        .memory-count {
+            font-size: 20px;
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #ff00ff;
+        }
+        .dice-panel {
+            background: #1a0f2a;
+            border: 4px solid #ffff00;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #00ffff;
+            text-shadow: 1px 1px 0 #ff00ff;
+        }
+        .dice-icon {
+            font-size: 24px;
+            filter: drop-shadow(0 0 5px #ff00ff);
+        }
+        .dice-bonus {
+            color: #ffff00;
+            font-size: 16px;
+        }
+        .story-card {
+            background: #1a0f2a;
+            border: 4px solid #ff00ff;
+            padding: 32px;
+            margin: 20px 0;
+            position: relative;
+            box-shadow: 8px 8px 0 #00ffff;
+        }
+        .story-title {
+            font-size: 20px;
+            color: #ffff00;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #ff00ff;
+            line-height: 1.5;
+        }
+        .story-desc {
+            color: #00ffff;
+            margin-bottom: 28px;
+            font-size: 12px;
+            line-height: 1.8;
+            padding: 16px;
+            background: #2a1a3a;
+            border: 2px solid #ffff00;
+        }
+        .choices-area {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .choice-btn {
+            background: #2a1a3a;
+            border: 4px solid #00ffff;
+            color: #ffff00;
+            padding: 16px;
+            font-size: 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 4px 4px 0 #ff00ff;
+            text-shadow: 1px 1px 0 #000000;
+            line-height: 1.5;
+        }
+        .choice-btn:hover {
+            background: #3a2a4a;
+            border-color: #ffff00;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #ff00ff;
+        }
+        .choice-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 #ff00ff;
+        }
+        .dice-result {
+            background: #1a0f2a;
+            border: 4px solid #ffff00;
+            padding: 20px;
+            margin-top: 24px;
+            color: #00ffff;
+            font-size: 12px;
+            text-align: center;
+            animation: pixelDice 0.3s steps(5);
+        }
+        @keyframes pixelDice {
+            0% { transform: scale(1); filter: hue-rotate(0deg); }
+            50% { transform: scale(1.1); filter: hue-rotate(90deg); }
+            100% { transform: scale(1); filter: hue-rotate(0deg); }
+        }
+        .dice-number {
+            font-size: 48px;
+            color: #ffff00;
+            text-shadow: 4px 4px 0 #ff00ff;
+            margin: 10px 0;
+        }
+        .timeline {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 16px 0;
+            margin: 10px 0;
+        }
+        .timeline-dot {
+            min-width: 40px;
+            height: 40px;
+            background: #1a0f2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #ffff00;
+            border: 2px solid #ff00ff;
+            cursor: pointer;
+            image-rendering: pixelated;
+        }
+        .timeline-dot.lucky {
+            background: #ffff00;
+            color: #ff00ff;
+            border-color: #00ffff;
+        }
+        .timeline-dot.success {
+            background: #00ffff;
+            color: #ff00ff;
+            border-color: #ffff00;
+        }
+        .timeline-dot.failure {
+            background: #ff00ff;
+            color: #ffff00;
+            border-color: #00ffff;
+        }
+        .memory-screen {
+            background: #1a0f2a;
+            border: 4px solid #ffff00;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .memory-card {
+            background: #2a1a3a;
+            border: 4px solid #00ffff;
+            padding: 20px 12px;
+            cursor: pointer;
+            transition: all 0.1s;
+            box-shadow: 4px 4px 0 #ff00ff;
+            text-align: center;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .memory-card:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #ff00ff;
+            border-color: #ffff00;
+        }
+        .memory-card.selected {
+            border-color: #ffff00;
+            background: #3a2a4a;
+            box-shadow: 0 0 0 2px #ffff00;
+        }
+        .memory-card.locked {
+            opacity: 0.5;
+            border-color: #666;
+            cursor: not-allowed;
+        }
+        .memory-card.locked:hover {
+            transform: none;
+            box-shadow: 4px 4px 0 #ff00ff;
+        }
+        .memory-card .emoji {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .memory-card .name {
+            font-size: 12px;
+            color: #ffff00;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .memory-card .desc {
+            font-size: 8px;
+            color: #00ffff;
+            line-height: 1.4;
+        }
+        button.primary {
+            background: #ff00ff;
+            border: none;
+            color: #ffff00;
+            padding: 16px 32px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 4px solid #00ffff;
+            box-shadow: 4px 4px 0 #ffff00;
+            text-shadow: 2px 2px 0 #000000;
+            margin: 10px 5px;
+        }
+        button.primary:hover:not(:disabled) {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #ffff00;
+        }
+        button.primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #00ffff;
+            border: none;
+            color: #ff00ff;
+            padding: 16px 32px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 4px solid #ffff00;
+            box-shadow: 4px 4px 0 #ff00ff;
+            text-shadow: 2px 2px 0 #000000;
+        }
+        button.secondary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 #ff00ff;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a0f2a;
+            border: 4px solid #ffff00;
+            padding: 16px 32px;
+            color: #00ffff;
+            z-index: 1000;
+            animation: slideDown 0.5s steps(10);
+            text-shadow: 1px 1px 0 #ff00ff;
+            box-shadow: 8px 8px 0 #ff00ff;
+            font-size: 12px;
+        }
+        @keyframes slideDown {
+            0% { top: -100px; opacity: 0; }
+            100% { top: 20px; opacity: 1; }
+        }
+        .welcome-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .welcome-title {
+            font-size: 32px;
+            color: #ffff00;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 0 #ff00ff, 8px 8px 0 #00ffff;
+            line-height: 1.5;
+        }
+        .welcome-subtitle {
+            font-size: 14px;
+            color: #00ffff;
+            margin-bottom: 48px;
+            text-shadow: 2px 2px 0 #ff00ff;
+        }
+        .disco-light {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff00ff22,
+                #00ffff22 20px,
+                #ffff0022 40px
+            );
+            animation: discoMove 10s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes discoMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="disco-light"></div>
+    <div class="game-container" id="gameRoot"></div>
+
+<script>
+(function() {
+    // ============================================================
+    // 复古DISCO音效系统
+    // ============================================================
+    const AudioSystem = {
+        context: null,
+        enabled: true,
+        
+        init() {
+            try {
+                this.context = new (window.AudioContext || window.webkitAudioContext)();
+                this.enabled = false;
+            } catch (e) {
+                this.enabled = false;
+            }
+        },
+        
+        enable() {
+            this.enabled = true;
+            this.playDiscoBeat();
+        },
+        
+        playDiceRoll() {
+            if (!this.enabled || !this.context) return;
+            const now = this.context.currentTime;
+            for (let i = 0; i < 5; i++) {
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                osc.type = 'square';
+                osc.frequency.value = 440 + i * 100;
+                gain.gain.value = 0.05;
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                gain.gain.setValueAtTime(0.05, now + i * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.1);
+                osc.start(now + i * 0.05);
+                osc.stop(now + i * 0.05 + 0.1);
+            }
+        },
+        
+        playSuccess() {
+            if (!this.enabled || !this.context) return;
+            const now = this.context.currentTime;
+            const freqs = [523.25, 659.25, 783.99];
+            freqs.forEach((freq, i) => {
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+                gain.gain.value = 0.08;
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                gain.gain.setValueAtTime(0.08, now + i * 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.3);
+                osc.start(now + i * 0.05);
+                osc.stop(now + i * 0.05 + 0.3);
+            });
+        },
+        
+        playLucky() {
+            if (!this.enabled || !this.context) return;
+            const now = this.context.currentTime;
+            for (let octave = 0; octave < 3; octave++) {
+                for (let i = 0; i < 4; i++) {
+                    const osc = this.context.createOscillator();
+                    const gain = this.context.createGain();
+                    osc.type = 'square';
+                    osc.frequency.value = 440 * Math.pow(2, octave) * (1 + i * 0.25);
+                    gain.gain.value = 0.03;
+                    osc.connect(gain);
+                    gain.connect(this.context.destination);
+                    gain.gain.setValueAtTime(0.03, now + octave * 0.1 + i * 0.025);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + octave * 0.1 + i * 0.025 + 0.15);
+                    osc.start(now + octave * 0.1 + i * 0.025);
+                    osc.stop(now + octave * 0.1 + i * 0.025 + 0.15);
+                }
+            }
+        },
+        
+        playMemory() {
+            if (!this.enabled || !this.context) return;
+            const now = this.context.currentTime;
+            const osc = this.context.createOscillator();
+            const gain = this.context.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = 659.25;
+            gain.gain.value = 0.1;
+            osc.connect(gain);
+            gain.connect(this.context.destination);
+            
+            for (let i = 0; i < 4; i++) {
+                gain.gain.setValueAtTime(0.1, now + i * 0.1);
+                gain.gain.setValueAtTime(0.01, now + i * 0.1 + 0.05);
+            }
+            
+            osc.start(now);
+            osc.stop(now + 0.5);
+        },
+        
+        playDiscoBeat() {
+            if (!this.enabled || !this.context) return;
+            const now = this.context.currentTime;
+            const bass = this.context.createOscillator();
+            const bassGain = this.context.createGain();
+            bass.type = 'triangle';
+            bass.frequency.value = 80;
+            bassGain.gain.value = 0.15;
+            bass.connect(bassGain);
+            bassGain.connect(this.context.destination);
+            
+            for (let i = 0; i < 4; i++) {
+                bassGain.gain.setValueAtTime(0.15, now + i * 0.5);
+                bassGain.gain.setValueAtTime(0.01, now + i * 0.5 + 0.1);
+            }
+            
+            bass.start(now);
+            bass.stop(now + 2);
+        }
+    };
+    
+    AudioSystem.init();
+
+    // ============================================================
+    // 生命形态定义
+    // ============================================================
+    const FORMS = {
+        SCHOLAR: 'scholar',
+        ARTIST: 'artist',
+        POET: 'poet',
+        CAT: 'cat',
+        DOG: 'dog',
+        RABBIT: 'rabbit',
+        SQUIRREL: 'squirrel',
+        SWALLOW: 'swallow',
+        STREAM: 'stream',
+        STONE: 'stone',
+        CLOUD: 'cloud',
+        TREE: 'tree',
+        FLOWER: 'flower',
+        MOON: 'moon',
+        MAHJONG: 'mahjong',
+        BEAT: 'beat',
+        MELODY: 'melody',
+        DISCO: 'disco',
+        FAIRY: 'fairy',
+        STAR: 'star'
+    };
+
+    const formsDatabase = {
+        [FORMS.SCHOLAR]: {
+            id: FORMS.SCHOLAR, name: '读书人',
+            description: '生于书香门第，长于杏花春雨。读书写字，与诗书为伴。',
+            baseAttrs: {慧心: 55, 生气: 45, 家境: 40, 怡然: 50, 交游: 45, 文采: 50},
+            transform: (old) => ({
+                慧心: Math.min(100, (old.慧心||50) + 7),
+                生气: Math.min(100, (old.生气||50) + 3),
+                家境: Math.min(100, (old.家境||40) + 2),
+                怡然: Math.min(100, (old.怡然||50) + 4),
+                交游: Math.min(100, (old.交游||45) + 3),
+                文采: Math.min(100, (old.文采||45) + 6)
+            }), emoji: '📖', unlockCondition: (state) => true
+        },
+        [FORMS.ARTIST]: {
+            id: FORMS.ARTIST, name: '画者',
+            description: '以画笔为媒，捕捉光影与色彩。世间万物，皆可入画。',
+            baseAttrs: {灵性: 60, 生气: 45, 怡然: 55, 洞察: 50, 耐心: 45},
+            transform: (old) => ({
+                灵性: Math.min(100, (old.灵性||50) + 8),
+                生气: Math.min(100, (old.生气||50) + 3),
+                怡然: Math.min(100, (old.怡然||50) + 5),
+                洞察: Math.min(100, (old.洞察||45) + 4),
+                耐心: Math.min(100, (old.耐心||40) + 3)
+            }), emoji: '🎨', unlockCondition: (state) => true
+        },
+        [FORMS.POET]: {
+            id: FORMS.POET, name: '诗人',
+            description: '心中藏诗意，笔下生春风。一花一木，皆可成诗。',
+            baseAttrs: {灵性: 55, 文采: 60, 怡然: 55, 慧心: 50, 交游: 45},
+            transform: (old) => ({
+                灵性: Math.min(100, (old.灵性||50) + 7),
+                文采: Math.min(100, (old.文采||45) + 7),
+                怡然: Math.min(100, (old.怡然||50) + 5),
+                慧心: Math.min(100, (old.慧心||50) + 4),
+                交游: Math.min(100, (old.交游||45) + 3)
+            }), emoji: '🖋️', unlockCondition: (state) => true
+        },
+        [FORMS.CAT]: {
+            id: FORMS.CAT, name: '猫',
+            description: '性喜暖阳，善解人意。昼伏夜出，悠然自得。',
+            baseAttrs: {灵动: 70, 可爱: 60, 好奇: 65, 温存: 60, 慵懒: 50},
+            transform: (human) => ({
+                灵动: Math.min(100, (human.生气||50) * 1.2 + 20),
+                可爱: Math.min(100, (human.怡然||50) * 1.2 + 15),
+                好奇: Math.min(100, (human.慧心||50) * 1.1 + 15),
+                温存: Math.min(100, (human.温存||45) * 1.2 + 15),
+                慵懒: 50
+            }), emoji: '🐱', unlockCondition: (state) => true
+        },
+        [FORMS.DOG]: {
+            id: FORMS.DOG, name: '犬',
+            description: '赤诚之心，忠实相伴。奔跑在田野间，追逐阳光。',
+            baseAttrs: {生气: 75, 赤诚: 70, 怡然: 75, 温存: 65, 好奇: 55},
+            transform: (human) => ({
+                生气: Math.min(100, (human.生气||50) * 1.3 + 15),
+                赤诚: Math.min(100, (human.交游||45) * 1.3 + 20),
+                怡然: Math.min(100, (human.怡然||50) * 1.3 + 15),
+                温存: Math.min(100, (human.温存||45) * 1.2 + 15),
+                好奇: Math.min(90, (human.好奇||45) * 1.1 + 10)
+            }), emoji: '🐶', unlockCondition: (state) => true
+        },
+        [FORMS.RABBIT]: {
+            id: FORMS.RABBIT, name: '兔',
+            description: '温柔可人，喜食青草。月下静坐，听风入眠。',
+            baseAttrs: {灵动: 65, 可爱: 70, 温良: 60, 温存: 60, 恬淡: 50},
+            transform: (human) => ({
+                灵动: Math.min(100, (human.生气||50) * 1.2 + 15),
+                可爱: Math.min(100, (human.怡然||50) * 1.2 + 20),
+                温良: Math.min(90, (human.温良||45) * 1.2 + 10),
+                温存: Math.min(90, (human.温存||45) * 1.1 + 15),
+                恬淡: 50
+            }), emoji: '🐰', unlockCondition: (state) => true
+        },
+        [FORMS.SQUIRREL]: {
+            id: FORMS.SQUIRREL, name: '松鼠',
+            description: '灵动于林间，收集秋日果实。忙碌而自在，与松果为伴。',
+            baseAttrs: {灵动: 75, 机敏: 65, 勤勉: 60, 怡然: 65, 好奇: 55},
+            transform: (human) => ({
+                灵动: Math.min(100, (human.生气||50) * 1.3 + 15),
+                机敏: Math.min(100, (human.慧心||50) * 1.2 + 15),
+                勤勉: Math.min(95, (human.勤勉||40) * 1.2 + 15),
+                怡然: Math.min(95, (human.怡然||50) * 1.1 + 15),
+                好奇: Math.min(90, (human.好奇||45) * 1.1 + 10)
+            }), emoji: '🐿️', unlockCondition: (state) => true
+        },
+        [FORMS.SWALLOW]: {
+            id: FORMS.SWALLOW, name: '燕',
+            description: '春来秋去，不忘旧巢。轻盈掠过水面，带来春的消息。',
+            baseAttrs: {灵动: 70, 方向: 65, 温存: 60, 赤诚: 65, 优雅: 55},
+            transform: (human) => ({
+                灵动: Math.min(100, (human.生气||50) * 1.3 + 10),
+                方向: Math.min(95, (human.慧心||50) * 1.1 + 20),
+                温存: Math.min(90, (human.温存||45) * 1.1 + 15),
+                赤诚: Math.min(95, (human.赤诚||40) * 1.2 + 15),
+                优雅: Math.min(90, (human.优雅||40) * 1.1 + 10)
+            }), emoji: '🐦', unlockCondition: (state) => true
+        },
+        [FORMS.STREAM]: {
+            id: FORMS.STREAM, name: '溪',
+            description: '山间清溪，潺潺流淌。映照天光云影，润泽万物生灵。',
+            baseAttrs: {澄澈: 70, 柔韧: 65, 宁静: 70, 滋养: 60, 恒长: 55},
+            transform: (human) => ({
+                澄澈: Math.min(100, (human.怡然||50) * 1.3 + 15),
+                柔韧: Math.min(95, (human.柔韧||40) * 1.2 + 15),
+                宁静: Math.min(100, (human.宁静||40) * 1.3 + 15),
+                滋养: Math.min(90, (human.滋养||40) * 1.2 + 15),
+                恒长: Math.min(90, (human.恒长||40) * 1.1 + 10)
+            }), emoji: '💧', unlockCondition: (state) => true
+        },
+        [FORMS.STONE]: {
+            id: FORMS.STONE, name: '石',
+            description: '山中顽石，历经风雨。沉默不语，却见证岁月沧桑。',
+            baseAttrs: {坚韧: 80, 沉稳: 75, 恒久: 70, 宁静: 65, 包容: 55},
+            transform: (human) => ({
+                坚韧: Math.min(100, (human.坚韧||40) * 1.4 + 20),
+                沉稳: Math.min(100, (human.沉稳||40) * 1.3 + 15),
+                恒久: Math.min(100, (human.恒久||40) * 1.3 + 15),
+                宁静: Math.min(95, (human.宁静||40) * 1.2 + 15),
+                包容: Math.min(90, (human.包容||40) * 1.1 + 10)
+            }), emoji: '🪨', unlockCondition: (state) => state.timeline.filter(t => t.success).length >= 3
+        },
+        [FORMS.CLOUD]: {
+            id: FORMS.CLOUD, name: '云',
+            description: '天上流云，随风舒卷。时聚时散，自在逍遥。',
+            baseAttrs: {轻盈: 75, 自在: 70, 变幻: 65, 温存: 60, 包容: 55},
+            transform: (human) => ({
+                轻盈: Math.min(100, (human.轻盈||40) * 1.3 + 20),
+                自在: Math.min(100, (human.怡然||50) * 1.3 + 15),
+                变幻: Math.min(95, (human.变幻||40) * 1.2 + 15),
+                温存: Math.min(90, (human.温存||45) * 1.1 + 15),
+                包容: Math.min(90, (human.包容||40) * 1.1 + 10)
+            }), emoji: '☁️', unlockCondition: (state) => state.timeline.filter(t => t.lucky).length >= 2
+        },
+        [FORMS.TREE]: {
+            id: FORMS.TREE, name: '树',
+            description: '古树参天，根深叶茂。春华秋实，生生不息。',
+            baseAttrs: {根深: 70, 叶茂: 65, 坚韧: 70, 滋养: 60, 恒久: 60},
+            transform: (human) => ({
+                根深: Math.min(100, (human.根深||40) * 1.3 + 20),
+                叶茂: Math.min(95, (human.叶茂||40) * 1.2 + 15),
+                坚韧: Math.min(100, (human.坚韧||40) * 1.3 + 15),
+                滋养: Math.min(90, (human.滋养||40) * 1.2 + 15),
+                恒久: Math.min(95, (human.恒久||40) * 1.2 + 10)
+            }), emoji: '🌳', unlockCondition: (state) => state.timeline.filter(t => t.success).length >= 5
+        },
+        [FORMS.FLOWER]: {
+            id: FORMS.FLOWER, name: '花',
+            description: '陌上花开，可缓缓归矣。一季绚烂，不负春光。',
+            baseAttrs: {绚烂: 70, 芬芳: 65, 柔美: 70, 短暂: 40, 希望: 60},
+            transform: (human) => ({
+                绚烂: Math.min(100, (human.绚烂||40) * 1.3 + 20),
+                芬芳: Math.min(95, (human.芬芳||40) * 1.2 + 15),
+                柔美: Math.min(95, (human.柔美||40) * 1.2 + 15),
+                短暂: 40,
+                希望: Math.min(90, (human.希望||40) * 1.1 + 15)
+            }), emoji: '🌸', unlockCondition: (state) => true
+        },
+        [FORMS.MOON]: {
+            id: FORMS.MOON, name: '月',
+            description: '夜空中最温柔的存在。阴晴圆缺，照见人间悲欢。',
+            baseAttrs: {清辉: 70, 温柔: 75, 永恒: 60, 宁静: 70, 诗意: 65},
+            transform: (human) => ({
+                清辉: Math.min(100, (human.清辉||40) * 1.3 + 20),
+                温柔: Math.min(100, (human.温柔||45) * 1.3 + 15),
+                永恒: Math.min(90, (human.永恒||40) * 1.1 + 15),
+                宁静: Math.min(95, (human.宁静||40) * 1.2 + 15),
+                诗意: Math.min(95, (human.诗意||40) * 1.2 + 15)
+            }), emoji: '🌙', unlockCondition: (state) => state.timeline.filter(t => t.lucky).length >= 4
+        },
+        [FORMS.MAHJONG]: {
+            id: FORMS.MAHJONG, name: '麻将',
+            description: '桌上精灵，红中发财白板。洗牌声中，自有乾坤。',
+            baseAttrs: {运气: 80, 机敏: 70, 沉稳: 65, 变幻: 60, 谐趣: 55},
+            transform: (human) => ({
+                运气: Math.min(100, (human.运气||40) * 1.4 + 20),
+                机敏: Math.min(100, (human.机敏||45) * 1.3 + 15),
+                沉稳: Math.min(95, (human.沉稳||40) * 1.2 + 15),
+                变幻: Math.min(90, (human.变幻||40) * 1.1 + 15),
+                谐趣: Math.min(90, (human.谐趣||40) * 1.1 + 15)
+            }), emoji: '🀄', unlockCondition: (state) => true
+        },
+        [FORMS.BEAT]: {
+            id: FORMS.BEAT, name: '节拍',
+            description: '心跳的律动，音乐的灵魂。咚哒哒咚哒，生生不息。',
+            baseAttrs: {律动: 80, 活力: 75, 节奏: 70, 感染力: 65, 永恒: 55},
+            transform: (human) => ({
+                律动: Math.min(100, (human.律动||40) * 1.4 + 20),
+                活力: Math.min(100, (human.生气||50) * 1.3 + 15),
+                节奏: Math.min(100, (human.节奏||40) * 1.3 + 15),
+                感染力: Math.min(95, (human.感染力||40) * 1.2 + 15),
+                永恒: Math.min(90, (human.永恒||40) * 1.1 + 10)
+            }), emoji: '🥁', unlockCondition: (state) => true
+        },
+        [FORMS.MELODY]: {
+            id: FORMS.MELODY, name: '旋律',
+            description: '流淌的音符，动人的歌。随风飘荡，抚慰人心。',
+            baseAttrs: {优美: 80, 感染力: 75, 灵动: 70, 温柔: 65, 永恒: 55},
+            transform: (human) => ({
+                优美: Math.min(100, (human.优美||40) * 1.4 + 20),
+                感染力: Math.min(100, (human.感染力||40) * 1.3 + 15),
+                灵动: Math.min(95, (human.灵动||45) * 1.2 + 15),
+                温柔: Math.min(95, (human.温柔||45) * 1.2 + 15),
+                永恒: Math.min(90, (human.永恒||40) * 1.1 + 10)
+            }), emoji: '🎵', unlockCondition: (state) => state.timeline.filter(t => t.success).length >= 3
+        },
+        [FORMS.DISCO]: {
+            id: FORMS.DISCO, name: 'DISCO',
+            description: '霓虹闪烁，节奏强烈。让所有人都跟着摇摆！',
+            baseAttrs: {律动: 85, 感染力: 80, 活力: 75, 光芒: 70, 永恒: 60},
+            transform: (human) => ({
+                律动: Math.min(100, (human.律动||40) * 1.5 + 20),
+                感染力: Math.min(100, (human.感染力||40) * 1.4 + 20),
+                活力: Math.min(100, (human.生气||50) * 1.3 + 15),
+                光芒: Math.min(95, (human.光芒||40) * 1.2 + 15),
+                永恒: Math.min(95, (human.永恒||40) * 1.1 + 15)
+            }), emoji: '🪩', unlockCondition: (state) => state.timeline.filter(t => t.lucky).length >= 5
+        },
+        [FORMS.FAIRY]: {
+            id: FORMS.FAIRY, name: '仙子',
+            description: '生于山林，与花鸟为伴。指尖轻点，便有星光洒落。',
+            baseAttrs: {灵性: 70, 温存: 75, 怡然: 75, 可爱: 70, 优雅: 65},
+            transform: (human) => ({
+                灵性: Math.min(100, (human.灵性||50) * 1.2 + 20),
+                温存: Math.min(100, (human.温存||45) * 1.3 + 15),
+                怡然: Math.min(100, (human.怡然||50) * 1.3 + 15),
+                可爱: Math.min(95, (human.可爱||40) * 1.2 + 15),
+                优雅: Math.min(95, (human.优雅||40) * 1.2 + 15)
+            }), emoji: '🧚', unlockCondition: (state) => state.timeline.filter(t => t.lucky).length >= 3
+        },
+        [FORMS.STAR]: {
+            id: FORMS.STAR, name: '星',
+            description: '高悬夜空，静静闪烁。为晚归的人照亮前路，听人许愿。',
+            baseAttrs: {光芒: 70, 温存: 70, 永恒: 55, 希望: 75, 宁静: 65},
+            transform: (human) => ({
+                光芒: Math.min(100, (human.怡然||50) * 1.2 + 20),
+                温存: Math.min(100, (human.温存||45) * 1.2 + 20),
+                永恒: Math.min(90, (human.永恒||40) * 1.1 + 15),
+                希望: Math.min(100, (human.希望||40) * 1.3 + 20),
+                宁静: Math.min(95, (human.宁静||40) * 1.2 + 15)
+            }), emoji: '⭐', unlockCondition: (state) => state.timeline.filter(t => t.success).length >= 8
+        }
+    };
+
+    // ============================================================
+    // 所有故事 - 每个形态6个不重复
+    // ============================================================
+    const lifeStories = [
+        // 读书人 (6个)
+        { id: 's1', form: FORMS.SCHOLAR, year: 7, 
+          title: '开蒙', 
+          desc: '七岁那年，父亲教你读第一本书。窗外有燕子飞过。',
+          paths: [
+            { text: '认真跟读', attr: '慧心', difficulty: 10, success: '父亲赞你聪慧，慧心+2', gainExp: 8, attrs: {慧心:2} },
+            { text: '看窗外燕', attr: '怡然', difficulty: 8, success: '燕子的身影掠过心头，怡然+2', gainExp: 6, attrs: {怡然:2} }
+          ], failText: '读错了字，父亲笑着纠正。', failAttrs: {} },
+        { id: 's2', form: FORMS.SCHOLAR, year: 12, 
+          title: '同窗', 
+          desc: '学堂里，你的同桌是个安静的女孩，常借你的书看。',
+          paths: [
+            { text: '借书与她', attr: '交游', difficulty: 12, success: '她回赠你一枚书签，交游+2', gainExp: 10, attrs: {交游:2} },
+            { text: '专心读书', attr: '慧心', difficulty: 10, success: '月考得了第一，慧心+2', gainExp: 8, attrs: {慧心:2} }
+          ], failText: '她转学了，留下一本诗集。', failAttrs: {怡然:-1} },
+        { id: 's3', form: FORMS.SCHOLAR, year: 15, 
+          title: '秋夜', 
+          desc: '秋夜微凉，你独自在灯下读书。窗外虫鸣声声。',
+          paths: [
+            { text: '挑灯夜读', attr: '耐心', difficulty: 13, success: '读完整卷，有所领悟，耐心+2', gainExp: 12, attrs: {耐心:2} },
+            { text: '推窗听虫', attr: '怡然', difficulty: 10, success: '虫鸣入耳，心静如水，怡然+2', gainExp: 8, attrs: {怡然:2} }
+          ], failText: '困意袭来，伏案而眠。', failAttrs: {} },
+        { id: 's4', form: FORMS.SCHOLAR, year: 18, 
+          title: '赴考', 
+          desc: '乡试将至，你要离家赴省城赶考。母亲为你收拾行囊。',
+          paths: [
+            { text: '辞别母亲', attr: '温存', difficulty: 10, success: '母亲眼含泪光，温存+2', gainExp: 8, attrs: {温存:2} },
+            { text: '临行读书', attr: '慧心', difficulty: 12, success: '又温习一遍，慧心+2', gainExp: 10, attrs: {慧心:2} }
+          ], failText: '路上遇雨，淋湿了书箱。', failAttrs: {} },
+        { id: 's5', form: FORMS.SCHOLAR, year: 20, 
+          title: '及第', 
+          desc: '皇榜放出，你的名字赫然在列。十年寒窗，终有所成。',
+          paths: [
+            { text: '写信回家', attr: '温存', difficulty: 8, success: '家人定会欢喜，温存+2', gainExp: 8, attrs: {温存:2} },
+            { text: '与友共饮', attr: '交游', difficulty: 10, success: '同窗举杯相庆，交游+2', gainExp: 8, attrs: {交游:2} }
+          ], failText: '名落孙山，回乡再读。', failAttrs: {怡然:-2} },
+        { id: 's6', form: FORMS.SCHOLAR, year: 30, 
+          title: '藏书', 
+          desc: '多年后，你回到故乡，整理年少时读过的书。',
+          paths: [
+            { text: '翻看旧书', attr: '慧心', difficulty: 10, success: '书页泛黄，墨迹如新，慧心+2', gainExp: 8, attrs: {慧心:2} },
+            { text: '忆及当年', attr: '怡然', difficulty: 8, success: '想起读书时光，怡然+2', gainExp: 6, attrs: {怡然:2} }
+          ], failAttrs: {} },
+
+        // 画者 (6个)
+        { id: 'a1', form: FORMS.ARTIST, year: 8,
+          title: '得笔',
+          desc: '你得到一支新画笔，笔杆温润，笔锋柔韧。',
+          paths: [
+            { text: '试画一枝', attr: '灵性', difficulty: 10, success: '画出的梅花有了生气，灵性+2', gainExp: 8, attrs: {灵性:2} },
+            { text: '细细把玩', attr: '怡然', difficulty: 8, success: '爱不释手，怡然+2', gainExp: 6, attrs: {怡然:2} }
+          ], failText: '不小心折断笔尖，心疼不已。', failAttrs: {} },
+        { id: 'a2', form: FORMS.ARTIST, year: 12,
+          title: '写生',
+          desc: '春日，你去郊外写生。桃花灼灼，杨柳依依。',
+          paths: [
+            { text: '画桃花', attr: '洞察', difficulty: 12, success: '桃花栩栩如生，洞察+2', gainExp: 10, attrs: {洞察:2} },
+            { text: '画流水', attr: '灵性', difficulty: 10, success: '流水之态跃然纸上，灵性+2', gainExp: 8, attrs: {灵性:2} }
+          ], failText: '画到一半，下起雨来。', failAttrs: {} },
+        { id: 'a3', form: FORMS.ARTIST, year: 16,
+          title: '观展',
+          desc: '城中有画展，展出前朝名家的真迹。',
+          paths: [
+            { text: '细细观摩', attr: '洞察', difficulty: 14, success: '领悟笔法精髓，洞察+2', gainExp: 12, attrs: {洞察:2} },
+            { text: '流连忘返', attr: '灵性', difficulty: 12, success: '心神俱醉，灵性+2', gainExp: 10, attrs: {灵性:2} }
+          ], failText: '闭馆时间到，依依不舍。', failAttrs: {} },
+        { id: 'a4', form: FORMS.ARTIST, year: 22,
+          title: '赠画',
+          desc: '友人成婚，你画了一幅《双燕图》为贺。',
+          paths: [
+            { text: '用心画', attr: '耐心', difficulty: 12, success: '友人甚喜，挂在厅堂，耐心+2', gainExp: 10, attrs: {耐心:2} },
+            { text: '题诗其上', attr: '文采', difficulty: 10, success: '诗画相映，更添意趣，文采+2', gainExp: 8, attrs: {文采:2} }
+          ], failText: '墨迹未干，被蹭花了。', failAttrs: {} },
+        { id: 'a5', form: FORMS.ARTIST, year: 28,
+          title: '遇知音',
+          desc: '有人愿出高价买你的画，但要求你改画风。',
+          paths: [
+            { text: '不改初心', attr: '坚韧', difficulty: 14, success: '坚守自己的风格，坚韧+2', gainExp: 12, attrs: {坚韧:2} },
+            { text: '从其所愿', attr: '家境', difficulty: 10, success: '得了一笔钱，家境+5', gainExp: 8, attrs: {家境:5} }
+          ], failAttrs: {} },
+        { id: 'a6', form: FORMS.ARTIST, year: 40,
+          title: '授徒',
+          desc: '有少年慕名而来，想拜你为师学画。',
+          paths: [
+            { text: '收他为徒', attr: '耐心', difficulty: 12, success: '悉心教导，耐心+2', gainExp: 10, attrs: {耐心:2} },
+            { text: '指点一二', attr: '交游', difficulty: 10, success: '他感激不尽，交游+2', gainExp: 8, attrs: {交游:2} }
+          ], failAttrs: {} },
+
+        // 诗人 (6个)
+        { id: 'p1', form: FORMS.POET, year: 10,
+          title: '初吟',
+          desc: '春日午后，你随口吟出两句诗。母亲听了，微微一笑。',
+          paths: [
+            { text: '记下诗句', attr: '文采', difficulty: 10, success: '诗句记在心中，文采+2', gainExp: 8, attrs: {文采:2} },
+            { text: '再想新句', attr: '灵性', difficulty: 12, success: '灵感涌现，灵性+2', gainExp: 10, attrs: {灵性:2} }
+          ], failText: '忘了刚才的诗句，有些懊恼。', failAttrs: {} },
+        { id: 'p2', form: FORMS.POET, year: 15,
+          title: '寻句',
+          desc: '你漫步山野，想要寻找诗的灵感。山花烂漫，溪水潺潺。',
+          paths: [
+            { text: '观花有感', attr: '灵性', difficulty: 12, success: '花开花落皆成诗，灵性+2', gainExp: 10, attrs: {灵性:2} },
+            { text: '听水得句', attr: '慧心', difficulty: 10, success: '流水声中得佳句，慧心+2', gainExp: 8, attrs: {慧心:2} }
+          ], failAttrs: {} },
+        { id: 'p3', form: FORMS.POET, year: 20,
+          title: '夜吟',
+          desc: '月夜，你独自在庭院中吟诗。月光如水，虫鸣如织。',
+          paths: [
+            { text: '对月吟咏', attr: '文采', difficulty: 12, success: '月下诗成，文采+2', gainExp: 10, attrs: {文采:2} },
+            { text: '静听虫鸣', attr: '怡然', difficulty: 8, success: '心与自然合，怡然+2', gainExp: 6, attrs: {怡然:2} }
+          ], failAttrs: {} },
+        { id: 'p4', form: FORMS.POET, year: 25,
+          title: '赠友',
+          desc: '友人远行，你作诗一首相赠。',
+          paths: [
+            { text: '用心作诗', attr: '文采', difficulty: 13, success: '友人读后动容，文采+2', gainExp: 12, attrs: {文采:2} },
+            { text: '临别赠言', attr: '交游', difficulty: 10, success: '友情更深，交游+2', gainExp: 8, attrs: {交游:2} }
+          ], failAttrs: {} },
+        { id: 'p5', form: FORMS.POET, year: 30,
+          title: '诗会',
+          desc: '城中有诗会，各方文人齐聚。',
+          paths: [
+            { text: '即兴赋诗', attr: '文采', difficulty: 14, success: '众人称赞，文采+2', gainExp: 12, attrs: {文采:2} },
+            { text: '静听他人', attr: '慧心', difficulty: 10, success: '有所领悟，慧心+2', gainExp: 8, attrs: {慧心:2} }
+          ], failAttrs: {} },
+        { id: 'p6', form: FORMS.POET, year: 40,
+          title: '诗稿',
+          desc: '你整理多年诗稿，发现已经积攒厚厚一册。',
+          paths: [
+            { text: '细细翻阅', attr: '怡然', difficulty: 8, success: '往昔历历在目，怡然+2', gainExp: 6, attrs: {怡然:2} },
+            { text: '继续创作', attr: '灵性', difficulty: 10, success: '诗心不老，灵性+2', gainExp: 8, attrs: {灵性:2} }
+          ], failAttrs: {} },
+
+        // 猫 (6个)
+        { id: 'c1', form: FORMS.CAT, year: 1, 
+          title: '初见天日', 
+          desc: '你睁开眼睛，看见母猫温柔的目光。阳光透过窗棂洒落。',
+          paths: [
+            { text: '依偎母猫', attr: '温存', difficulty: 8, success: '母猫舔舐你的毛发，温存+2', gainExp: 6, attrs: {温存:2} },
+            { text: '环顾四周', attr: '好奇', difficulty: 10, success: '这个世界如此新奇，好奇+2', gainExp: 8, attrs: {好奇:2} }
+          ], failText: '打了个哈欠，又沉沉睡去。', failAttrs: {} },
+        { id: 'c2', form: FORMS.CAT, year: 2, 
+          title: '戏线团', 
+          desc: '小主人丢来一个线团，在你面前滚来滚去。',
+          paths: [
+            { text: '扑击戏耍', attr: '灵动', difficulty: 12, success: '线团滚来滚去，玩得尽兴，灵动+2', gainExp: 10, attrs: {灵动:2} },
+            { text: '静观其变', attr: '好奇', difficulty: 10, success: '先观察一下，好奇+2', gainExp: 8, attrs: {好奇:2} }
+          ], failText: '被线缠住，小主人笑着帮你解开。', failAttrs: {} },
+        { id: 'c3', form: FORMS.CAT, year: 3, 
+          title: '沐阳', 
+          desc: '午后，阳光正好。你找到一处温暖的地方。',
+          paths: [
+            { text: '酣然入梦', attr: '慵懒', difficulty: 8, success: '做了一个美梦，慵懒+2', gainExp: 6, attrs: {慵懒:2} },
+            { text: '梳理毛发', attr: '可爱', difficulty: 10, success: '把自己舔得干干净净，可爱+2', gainExp: 8, attrs: {可爱:2} }
+          ], failText: '被小主人抱起，亲了一口。', failAttrs: {} },
+        { id: 'c4', form: FORMS.CAT, year: 4, 
+          title: '夜巡', 
+          desc: '夜深人静，你听见窸窸窣窣的声音。',
+          paths: [
+            { text: '悄然靠近', attr: '灵动', difficulty: 14, success: '是一只老鼠，你抓住了它，灵动+2', gainExp: 12, attrs: {灵动:2} },
+            { text: '呼唤母猫', attr: '温存', difficulty: 10, success: '母猫过来帮你，温存+2', gainExp: 8, attrs: {温存:2} }
+          ], failText: '老鼠跑掉了，下次再努力。', failAttrs: {} },
+        { id: 'c5', form: FORMS.CAT, year: 5, 
+          title: '望月', 
+          desc: '月圆之夜，你蹲在窗台，看天上明月。',
+          paths: [
+            { text: '静静凝望', attr: '温存', difficulty: 8, success: '月光如水，温存+2', gainExp: 6, attrs: {温存:2} },
+            { text: '轻喵一声', attr: '可爱', difficulty: 10, success: '声音融进夜色，可爱+2', gainExp: 8, attrs: {可爱:2} }
+          ], failText: '困了，蜷成一团睡着。', failAttrs: {} },
+        { id: 'c6', form: FORMS.CAT, year: 6,
+          title: '新邻',
+          desc: '隔壁搬来一只犬，隔着栅栏看你。',
+          paths: [
+            { text: '与之对视', attr: '好奇', difficulty: 12, success: '你们成了朋友，好奇+2', gainExp: 10, attrs: {好奇:2} },
+            { text: '转身离去', attr: '慵懒', difficulty: 8, success: '还是回去晒太阳吧，慵懒+2', gainExp: 6, attrs: {慵懒:2} }
+          ], failAttrs: {} },
+
+        // 犬 (6个)
+        { id: 'd1', form: FORMS.DOG, year: 1, 
+          title: '初遇', 
+          desc: '一双手将你抱起，你看见一双温柔的眼睛。',
+          paths: [
+            { text: '摇尾示好', attr: '怡然', difficulty: 8, success: '那人笑了，怡然+2', gainExp: 8, attrs: {怡然:2} },
+            { text: '轻舔其手', attr: '温存', difficulty: 10, success: '他觉得你很乖，温存+2', gainExp: 8, attrs: {温存:2} }
+          ], failText: '有些害怕，缩成一团。', failAttrs: {} },
+        { id: 'd2', form: FORMS.DOG, year: 2, 
+          title: '郊游', 
+          desc: '主人带你去郊外，草地辽阔，风里带着花香。',
+          paths: [
+            { text: '尽情奔跑', attr: '生气', difficulty: 12, success: '跑得好畅快，生气+2', gainExp: 10, attrs: {生气:2} },
+            { text: '紧随主人', attr: '赤诚', difficulty: 10, success: '主人摸摸你的头，赤诚+2', gainExp: 8, attrs: {赤诚:2} }
+          ], failText: '追蝴蝶迷了路，主人找到你时，你扑进他怀里。', failAttrs: {} },
+        { id: 'd3', form: FORMS.DOG, year: 3, 
+          title: '戏飞盘', 
+          desc: '主人拿出飞盘，高高抛起。',
+          paths: [
+            { text: '奋力一跃', attr: '生气', difficulty: 14, success: '接住了！主人夸你真棒，生气+2', gainExp: 12, attrs: {生气:2} },
+            { text: '追逐奔跑', attr: '怡然', difficulty: 10, success: '虽然没接到，但很开心，怡然+2', gainExp: 8, attrs: {怡然:2} }
+          ], failText: '没接住，主人依然摸摸你的头。', failAttrs: {} },
+        { id: 'd4', form: FORMS.DOG, year: 4, 
+          title: '守候', 
+          desc: '主人出门，你留在家里看门。',
+          paths: [
+            { text: '卧于门边', attr: '赤诚', difficulty: 10, success: '主人归来时，你第一个冲上去，赤诚+2', gainExp: 8, attrs: {赤诚:2} },
+            { text: '自得其乐', attr: '怡然', difficulty: 8, success: '玩着玩具，等主人回来，怡然+2', gainExp: 6, attrs: {怡然:2} }
+          ], failText: '有点想主人，轻轻叫了几声。', failAttrs: {} },
+        { id: 'd5', form: FORMS.DOG, year: 5, 
+          title: '沐浴', 
+          desc: '主人给你洗澡，水温刚好，泡沫轻柔。',
+          paths: [
+            { text: '乖乖不动', attr: '温存', difficulty: 10, success: '主人夸你乖，温存+2', gainExp: 8, attrs: {温存:2} },
+            { text: '戏水玩耍', attr: '生气', difficulty: 12, success: '甩得到处是水，生气+2', gainExp: 8, attrs: {生气:2} }
+          ], failText: '不想洗澡，跑来跑去。', failAttrs: {} },
+        { id: 'd6', form: FORMS.DOG, year: 6,
+          title: '生辰', 
+          desc: '今天是你的生日，主人给你准备了小点心。',
+          paths: [
+            { text: '开心享用', attr: '好奇', difficulty: 8, success: '味道真好，好奇+2', gainExp: 8, attrs: {好奇:2} },
+            { text: '与主分享', attr: '赤诚', difficulty: 10, success: '主人开心地笑了，赤诚+2', gainExp: 8, attrs: {赤诚:2} }
+          ], failAttrs: {} },
+
+        // 兔 (6个)
+        { id: 'r1', form: FORMS.RABBIT, year: 1, 
+          title: '食青', 
+          desc: '你发现一丛鲜嫩的青草，带着晨露。',
+          paths: [
+            { text: '慢慢啃食', attr: '恬淡', difficulty: 10, success: '青草清甜，恬淡+2', gainExp: 8, attrs: {恬淡:2} },
+            { text: '环顾四周', attr: '温良', difficulty: 8, success: '看看有没有危险，温良+2', gainExp: 6, attrs: {温良:2} }
+          ], failAttrs: {} },
+        { id: 'r2', form: FORMS.RABBIT, year: 2, 
+          title: '跃涧', 
+          desc: '一条小溪挡在面前，溪水清澈见底。',
+          paths: [
+            { text: '轻轻跃过', attr: '灵动', difficulty: 12, success: '稳稳落在对岸，灵动+2', gainExp: 10, attrs: {灵动:2} },
+            { text: '沿溪而行', attr: '恬淡', difficulty: 8, success: '找到一处浅滩过去，恬淡+2', gainExp: 6, attrs: {恬淡:2} }
+          ], failAttrs: {} },
+        { id: 'r3', form: FORMS.RABBIT, year: 3, 
+          title: '藏踪', 
+          desc: '远处传来脚步声，你想躲起来。',
+          paths: [
+            { text: '隐入草丛', attr: '温良', difficulty: 12, success: '藏得很好，没被发现，温良+2', gainExp: 8, attrs: {温良:2} },
+            { text: '静静不动', attr: '恬淡', difficulty: 10, success: '屏住呼吸，恬淡+2', gainExp: 6, attrs: {恬淡:2} }
+          ], failAttrs: {} },
+        { id: 'r4', form: FORMS.RABBIT, year: 4, 
+          title: '沐雨', 
+          desc: '突然下起雨来，你要找地方躲雨。',
+          paths: [
+            { text: '躲入树洞', attr: '温存', difficulty: 8, success: '树洞干燥温暖，温存+2', gainExp: 6, attrs: {温存:2} },
+            { text: '跑回窝里', attr: '灵动', difficulty: 10, success: '跑得飞快，灵动+2', gainExp: 8, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'r5', form: FORMS.RABBIT, year: 5, 
+          title: '望月', 
+          desc: '夜晚，月亮又圆又亮。你坐在草地上仰望。',
+          paths: [
+            { text: '静静发呆', attr: '恬淡', difficulty: 8, success: '月亮好美，恬淡+2', gainExp: 6, attrs: {恬淡:2} },
+            { text: '想起家人', attr: '温存', difficulty: 10, success: '有点想念，温存+2', gainExp: 8, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'r6', form: FORMS.RABBIT, year: 6,
+          title: '逢友',
+          desc: '一只乌龟慢慢爬过来，好奇地看着你。',
+          paths: [
+            { text: '与之玩耍', attr: '温良', difficulty: 10, success: '你们成了朋友，温良+2', gainExp: 8, attrs: {温良:2} },
+            { text: '慢慢跟随', attr: '恬淡', difficulty: 8, success: '陪他慢慢走，恬淡+2', gainExp: 6, attrs: {恬淡:2} }
+          ], failAttrs: {} },
+
+        // 松鼠 (6个)
+        { id: 'sq1', form: FORMS.SQUIRREL, year: 1,
+          title: '初识松果',
+          desc: '你第一次见到松果，好奇地闻了闻。',
+          paths: [
+            { text: '抱着啃', attr: '好奇', difficulty: 8, success: '里面有松子，好吃！好奇+2', gainExp: 6, attrs: {好奇:2} },
+            { text: '滚着玩', attr: '灵动', difficulty: 10, success: '松果滚来滚去，真好玩，灵动+2', gainExp: 8, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'sq2', form: FORMS.SQUIRREL, year: 2,
+          title: '藏果',
+          desc: '秋天到了，你要为冬天储存食物。',
+          paths: [
+            { text: '多藏几处', attr: '勤勉', difficulty: 12, success: '藏了好多松果，勤勉+2', gainExp: 10, attrs: {勤勉:2} },
+            { text: '记好位置', attr: '机敏', difficulty: 10, success: '记得每个藏果的地方，机敏+2', gainExp: 8, attrs: {机敏:2} }
+          ], failAttrs: {} },
+        { id: 'sq3', form: FORMS.SQUIRREL, year: 3,
+          title: '跃枝',
+          desc: '树枝间距离有些远，你要跳过去。',
+          paths: [
+            { text: '奋力一跃', attr: '灵动', difficulty: 12, success: '稳稳落在对面，灵动+2', gainExp: 10, attrs: {灵动:2} },
+            { text: '找近的路', attr: '机敏', difficulty: 8, success: '找到更安全的路线，机敏+2', gainExp: 6, attrs: {机敏:2} }
+          ], failAttrs: {} },
+        { id: 'sq4', form: FORMS.SQUIRREL, year: 4,
+          title: '秋千',
+          desc: '一根藤蔓垂下来，像秋千一样。',
+          paths: [
+            { text: '荡起来', attr: '怡然', difficulty: 10, success: '荡得好高，好开心，怡然+2', gainExp: 8, attrs: {怡然:2} },
+            { text: '抓着玩', attr: '灵动', difficulty: 8, success: '在藤蔓上翻跟头，灵动+2', gainExp: 6, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'sq5', form: FORMS.SQUIRREL, year: 5,
+          title: '遇友',
+          desc: '一只小鸟落在你旁边的树枝上。',
+          paths: [
+            { text: '分享松果', attr: '勤勉', difficulty: 10, success: '小鸟成了你的朋友，勤勉+2', gainExp: 8, attrs: {勤勉:2} },
+            { text: '好奇观察', attr: '好奇', difficulty: 8, success: '小鸟好可爱，好奇+2', gainExp: 6, attrs: {好奇:2} }
+          ], failAttrs: {} },
+        { id: 'sq6', form: FORMS.SQUIRREL, year: 6,
+          title: '冬眠',
+          desc: '冬天来了，你躲在温暖的窝里。',
+          paths: [
+            { text: '安心睡觉', attr: '恬淡', difficulty: 8, success: '睡得好香，恬淡+2', gainExp: 6, attrs: {恬淡:2} },
+            { text: '吃点存粮', attr: '怡然', difficulty: 6, success: '边吃边睡，真幸福，怡然+2', gainExp: 4, attrs: {怡然:2} }
+          ], failAttrs: {} },
+
+        // 燕 (6个)
+        { id: 'sw1', form: FORMS.SWALLOW, year: 1,
+          title: '学飞',
+          desc: '春天，你第一次尝试飞翔。',
+          paths: [
+            { text: '勇敢试飞', attr: '灵动', difficulty: 12, success: '飞起来了！灵动+2', gainExp: 10, attrs: {灵动:2} },
+            { text: '看妈妈飞', attr: '温存', difficulty: 8, success: '妈妈飞得真好看，温存+2', gainExp: 6, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'sw2', form: FORMS.SWALLOW, year: 2,
+          title: '筑巢',
+          desc: '你在屋檐下筑巢，用泥巴和草。',
+          paths: [
+            { text: '慢慢筑', attr: '耐心', difficulty: 12, success: '巢筑得又大又舒服，耐心+2', gainExp: 10, attrs: {耐心:2} },
+            { text: '找好材料', attr: '方向', difficulty: 10, success: '找到最软的草，方向+2', gainExp: 8, attrs: {方向:2} }
+          ], failAttrs: {} },
+        { id: 'sw3', form: FORMS.SWALLOW, year: 3,
+          title: '归途',
+          desc: '秋天你飞去南方，春天又飞回家。',
+          paths: [
+            { text: '记得路', attr: '方向', difficulty: 14, success: '找到去年筑的巢，方向+2', gainExp: 12, attrs: {方向:2} },
+            { text: '跟着大家', attr: '赤诚', difficulty: 10, success: '和大家一起回家，赤诚+2', gainExp: 8, attrs: {赤诚:2} }
+          ], failAttrs: {} },
+        { id: 'sw4', form: FORMS.SWALLOW, year: 4,
+          title: '哺雏',
+          desc: '你的小宝宝出生了，要喂他们吃虫子。',
+          paths: [
+            { text: '多抓虫', attr: '灵动', difficulty: 14, success: '宝宝吃得饱饱的，灵动+2', gainExp: 12, attrs: {灵动:2} },
+            { text: '温柔喂', attr: '温存', difficulty: 10, success: '宝宝们好乖，温存+2', gainExp: 8, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'sw5', form: FORMS.SWALLOW, year: 5,
+          title: '遇雨',
+          desc: '大雨突至，你要找地方躲雨。',
+          paths: [
+            { text: '飞回巢', attr: '方向', difficulty: 10, success: '飞快地飞回家，方向+2', gainExp: 8, attrs: {方向:2} },
+            { text: '檐下暂避', attr: '优雅', difficulty: 8, success: '雨滴落在羽毛上，优雅+2', gainExp: 6, attrs: {优雅:2} }
+          ], failAttrs: {} },
+        { id: 'sw6', form: FORMS.SWALLOW, year: 6,
+          title: '教飞',
+          desc: '你的孩子长大了，你教他们飞翔。',
+          paths: [
+            { text: '耐心示范', attr: '耐心', difficulty: 12, success: '孩子们学会了，耐心+2', gainExp: 10, attrs: {耐心:2} },
+            { text: '鼓励他们', attr: '温存', difficulty: 8, success: '勇敢地飞吧，温存+2', gainExp: 6, attrs: {温存:2} }
+          ], failAttrs: {} },
+
+        // 溪 (6个)
+        { id: 'st1', form: FORMS.STREAM, year: 1,
+          title: '源头',
+          desc: '你从山间的泉眼中涌出，清澈冰凉。',
+          paths: [
+            { text: '静静流淌', attr: '宁静', difficulty: 8, success: '感受山间的宁静，宁静+2', gainExp: 6, attrs: {宁静:2} },
+            { text: '向前探索', attr: '好奇', difficulty: 10, success: '想知道前方有什么，好奇+2', gainExp: 8, attrs: {好奇:2} }
+          ], failAttrs: {} },
+        { id: 'st2', form: FORMS.STREAM, year: 5,
+          title: '遇石',
+          desc: '一块巨石挡在路上，你要如何过去？',
+          paths: [
+            { text: '绕石而行', attr: '柔韧', difficulty: 10, success: '从旁边绕过，继续向前，柔韧+2', gainExp: 8, attrs: {柔韧:2} },
+            { text: '静静蓄力', attr: '耐心', difficulty: 12, success: '日积月累，终能穿石，耐心+2', gainExp: 10, attrs: {耐心:2} }
+          ], failAttrs: {} },
+        { id: 'st3', form: FORMS.STREAM, year: 10,
+          title: '映月',
+          desc: '夜晚，一轮明月倒映在你身上。',
+          paths: [
+            { text: '静映月光', attr: '澄澈', difficulty: 8, success: '水面如镜，澄澈+2', gainExp: 6, attrs: {澄澈:2} },
+            { text: '涟漪微漾', attr: '灵性', difficulty: 10, success: '风过水面，泛起微波，灵性+2', gainExp: 8, attrs: {灵性:2} }
+          ], failAttrs: {} },
+        { id: 'st4', form: FORMS.STREAM, year: 20,
+          title: '润物',
+          desc: '你流经一片干涸的土地，路边的野花向你低头。',
+          paths: [
+            { text: '滋养它们', attr: '滋养', difficulty: 12, success: '野花重新绽放，滋养+2', gainExp: 10, attrs: {滋养:2} },
+            { text: '匆匆而过', attr: '轻盈', difficulty: 8, success: '继续向前，轻盈+2', gainExp: 6, attrs: {轻盈:2} }
+          ], failAttrs: {} },
+        { id: 'st5', form: FORMS.STREAM, year: 30,
+          title: '汇流',
+          desc: '你遇到另一条小溪，你们汇合在一起。',
+          paths: [
+            { text: '结伴同行', attr: '交游', difficulty: 10, success: '一起流向远方，交游+2', gainExp: 8, attrs: {交游:2} },
+            { text: '各自前行', attr: '独立', difficulty: 8, success: '保持自己的节奏，独立+2', gainExp: 6, attrs: {独立:2} }
+          ], failAttrs: {} },
+        { id: 'st6', form: FORMS.STREAM, year: 50,
+          title: '入江',
+          desc: '你终于汇入大江，视野豁然开朗。',
+          paths: [
+            { text: '融入江水', attr: '随性', difficulty: 10, success: '成为江的一部分，随性+2', gainExp: 8, attrs: {随性:2} },
+            { text: '回首来路', attr: '恒长', difficulty: 12, success: '想起一路的风景，恒长+2', gainExp: 10, attrs: {恒长:2} }
+          ], failAttrs: {} },
+
+        // 石 (6个)
+        { id: 'stn1', form: FORMS.STONE, year: 100,
+          title: '经年',
+          desc: '你在山中静静伫立，不知过了多少年月。',
+          paths: [
+            { text: '静观其变', attr: '宁静', difficulty: 8, success: '看四季轮回，心无所动，宁静+2', gainExp: 6, attrs: {宁静:2} },
+            { text: '感受时光', attr: '恒久', difficulty: 10, success: '体会岁月的流逝，恒久+2', gainExp: 8, attrs: {恒久:2} }
+          ], failAttrs: {} },
+        { id: 'stn2', form: FORMS.STONE, year: 500,
+          title: '风雨',
+          desc: '狂风暴雨袭来，雨点打在你身上。',
+          paths: [
+            { text: '岿然不动', attr: '坚韧', difficulty: 12, success: '风雨过后，你依然如故，坚韧+2', gainExp: 10, attrs: {坚韧:2} },
+            { text: '任其冲刷', attr: '包容', difficulty: 10, success: '雨水洗净你的表面，包容+2', gainExp: 8, attrs: {包容:2} }
+          ], failAttrs: {} },
+        { id: 'stn3', form: FORMS.STONE, year: 1000,
+          title: '苔生',
+          desc: '青苔在你身上生长，绿意盎然。',
+          paths: [
+            { text: '任其附着', attr: '包容', difficulty: 8, success: '青苔让你更有生机，包容+2', gainExp: 6, attrs: {包容:2} },
+            { text: '保持洁净', attr: '坚韧', difficulty: 10, success: '不被青苔覆盖，坚韧+2', gainExp: 8, attrs: {坚韧:2} }
+          ], failAttrs: {} },
+        { id: 'stn4', form: FORMS.STONE, year: 2000,
+          title: '风化',
+          desc: '风吹日晒，你的表面开始剥落。',
+          paths: [
+            { text: '坦然接受', attr: '宁静', difficulty: 10, success: '这是自然的规律，宁静+2', gainExp: 8, attrs: {宁静:2} },
+            { text: '坚守本质', attr: '恒久', difficulty: 12, success: '核心依然坚硬，恒久+2', gainExp: 10, attrs: {恒久:2} }
+          ], failAttrs: {} },
+        { id: 'stn5', form: FORMS.STONE, year: 3000,
+          title: '成砂',
+          desc: '你渐渐风化成了砂砾，随风飘散。',
+          paths: [
+            { text: '随风而去', attr: '随性', difficulty: 8, success: '成为沙滩的一部分，随性+2', gainExp: 6, attrs: {随性:2} },
+            { text: '聚集成岩', attr: '坚韧', difficulty: 14, success: '再次凝结成岩石，坚韧+2', gainExp: 12, attrs: {坚韧:2} }
+          ], failAttrs: {} },
+
+        // 云 (6个)
+        { id: 'cl1', form: FORMS.CLOUD, year: 1,
+          title: '成形',
+          desc: '水汽凝聚，你成了一朵小小的白云。',
+          paths: [
+            { text: '随风飘荡', attr: '自在', difficulty: 8, success: '想去哪里就去哪里，自在+2', gainExp: 6, attrs: {自在:2} },
+            { text: '慢慢成形', attr: '轻盈', difficulty: 10, success: '形状越来越美，轻盈+2', gainExp: 8, attrs: {轻盈:2} }
+          ], failAttrs: {} },
+        { id: 'cl2', form: FORMS.CLOUD, year: 2,
+          title: '遇风',
+          desc: '一阵大风吹来，你要被吹散了。',
+          paths: [
+            { text: '随风舒展', attr: '随性', difficulty: 10, success: '变成各种形状，随性+2', gainExp: 8, attrs: {随性:2} },
+            { text: '凝聚不散', attr: '坚韧', difficulty: 12, success: '保持自己的形状，坚韧+2', gainExp: 10, attrs: {坚韧:2} }
+          ], failAttrs: {} },
+        { id: 'cl3', form: FORMS.CLOUD, year: 3,
+          title: '映霞',
+          desc: '清晨的阳光照在你身上，染成金色。',
+          paths: [
+            { text: '绽放光彩', attr: '光芒', difficulty: 10, success: '成为朝霞的一部分，光芒+2', gainExp: 8, attrs: {光芒:2} },
+            { text: '悠然自得', attr: '自在', difficulty: 8, success: '慢慢飘过天空，自在+2', gainExp: 6, attrs: {自在:2} }
+          ], failAttrs: {} },
+        { id: 'cl4', form: FORMS.CLOUD, year: 4,
+          title: '化雨',
+          desc: '你越积越厚，要化作雨水落下。',
+          paths: [
+            { text: '滋润大地', attr: '滋养', difficulty: 12, success: '化作春雨，滋养万物，滋养+2', gainExp: 10, attrs: {滋养:2} },
+            { text: '继续飘荡', attr: '自在', difficulty: 8, success: '再飘一会儿，自在+2', gainExp: 6, attrs: {自在:2} }
+          ], failAttrs: {} },
+        { id: 'cl5', form: FORMS.CLOUD, year: 5,
+          title: '重逢',
+          desc: '你又变成了云，在空中遇见老朋友。',
+          paths: [
+            { text: '并肩同行', attr: '交游', difficulty: 8, success: '一起飘荡，交游+2', gainExp: 6, attrs: {交游:2} },
+            { text: '各自飘散', attr: '独立', difficulty: 6, success: '自由自在，独立+2', gainExp: 4, attrs: {独立:2} }
+          ], failAttrs: {} },
+        { id: 'cl6', form: FORMS.CLOUD, year: 10,
+          title: '观人间',
+          desc: '你飘在高处，看着人间的悲欢离合。',
+          paths: [
+            { text: '默默祝福', attr: '温存', difficulty: 10, success: '愿他们幸福，温存+2', gainExp: 8, attrs: {温存:2} },
+            { text: '超然物外', attr: '自在', difficulty: 8, success: '云卷云舒，与我何干，自在+2', gainExp: 6, attrs: {自在:2} }
+          ], failAttrs: {} },
+
+        // 树 (6个)
+        { id: 't1', form: FORMS.TREE, year: 5,
+          title: '扎根',
+          desc: '你是一颗种子，在泥土中发芽。',
+          paths: [
+            { text: '深深扎根', attr: '根深', difficulty: 10, success: '根扎得深，不怕风雨，根深+2', gainExp: 8, attrs: {根深:2} },
+            { text: '向上生长', attr: '生长', difficulty: 8, success: '快快长大，生长+2', gainExp: 6, attrs: {生长:2} }
+          ], failAttrs: {} },
+        { id: 't2', form: FORMS.TREE, year: 10,
+          title: '初春',
+          desc: '春天来了，你长出第一片新叶。',
+          paths: [
+            { text: '舒展枝叶', attr: '叶茂', difficulty: 8, success: '叶子越来越多，叶茂+2', gainExp: 6, attrs: {叶茂:2} },
+            { text: '享受阳光', attr: '向阳', difficulty: 6, success: '阳光真好，向阳+2', gainExp: 4, attrs: {向阳:2} }
+          ], failAttrs: {} },
+        { id: 't3', form: FORMS.TREE, year: 20,
+          title: '夏荫',
+          desc: '夏日炎炎，有人在你树下乘凉。',
+          paths: [
+            { text: '为他遮荫', attr: '滋养', difficulty: 10, success: '他感激地看着你，滋养+2', gainExp: 8, attrs: {滋养:2} },
+            { text: '轻轻摇动', attr: '随性', difficulty: 8, success: '风吹过，沙沙作响，随性+2', gainExp: 6, attrs: {随性:2} }
+          ], failAttrs: {} },
+        { id: 't4', form: FORMS.TREE, year: 30,
+          title: '秋实',
+          desc: '秋天到了，你结出累累果实。',
+          paths: [
+            { text: '任人采摘', attr: '滋养', difficulty: 10, success: '他们开心地吃着果子，滋养+2', gainExp: 8, attrs: {滋养:2} },
+            { text: '留给鸟儿', attr: '温存', difficulty: 8, success: '小鸟们来啄食，温存+2', gainExp: 6, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 't5', form: FORMS.TREE, year: 50,
+          title: '冬雪',
+          desc: '大雪覆盖你的枝头，银装素裹。',
+          paths: [
+            { text: '弯腰承雪', attr: '坚韧', difficulty: 12, success: '雪压不弯，坚韧+2', gainExp: 10, attrs: {坚韧:2} },
+            { text: '抖落雪花', attr: '随性', difficulty: 8, success: '轻轻一抖，雪簌簌落下，随性+2', gainExp: 6, attrs: {随性:2} }
+          ], failAttrs: {} },
+        { id: 't6', form: FORMS.TREE, year: 100,
+          title: '年轮',
+          desc: '你已长成参天大树，树干里多了许多年轮。',
+          paths: [
+            { text: '回望岁月', attr: '恒久', difficulty: 10, success: '一圈年轮，一岁枯荣，恒久+2', gainExp: 8, attrs: {恒久:2} },
+            { text: '继续生长', attr: '生长', difficulty: 8, success: '还要再长一百年，生长+2', gainExp: 6, attrs: {生长:2} }
+          ], failAttrs: {} },
+
+        // 花 (6个)
+        { id: 'f1', form: FORMS.FLOWER, year: 1,
+          title: '含苞',
+          desc: '你还是一个花苞，藏在绿叶之间。',
+          paths: [
+            { text: '静静等待', attr: '耐心', difficulty: 8, success: '等待绽放的时机，耐心+2', gainExp: 6, attrs: {耐心:2} },
+            { text: '努力生长', attr: '生长', difficulty: 10, success: '快快长大，生长+2', gainExp: 8, attrs: {生长:2} }
+          ], failAttrs: {} },
+        { id: 'f2', form: FORMS.FLOWER, year: 2,
+          title: '绽放',
+          desc: '在一个清晨，你终于绽放了。',
+          paths: [
+            { text: '展示美丽', attr: '绚烂', difficulty: 10, success: '花瓣鲜艳，绚烂+2', gainExp: 8, attrs: {绚烂:2} },
+            { text: '散发芬芳', attr: '芬芳', difficulty: 8, success: '香气四溢，芬芳+2', gainExp: 6, attrs: {芬芳:2} }
+          ], failAttrs: {} },
+        { id: 'f3', form: FORMS.FLOWER, year: 3,
+          title: '引蝶',
+          desc: '一只蝴蝶飞来，落在你身上。',
+          paths: [
+            { text: '任它停留', attr: '温柔', difficulty: 8, success: '蝴蝶轻轻扇动翅膀，温柔+2', gainExp: 6, attrs: {温柔:2} },
+            { text: '随风摇曳', attr: '柔美', difficulty: 10, success: '和蝴蝶一起跳舞，柔美+2', gainExp: 8, attrs: {柔美:2} }
+          ], failAttrs: {} },
+        { id: 'f4', form: FORMS.FLOWER, year: 4,
+          title: '遇雨',
+          desc: '一场大雨打在你身上，花瓣湿透了。',
+          paths: [
+            { text: '低头避雨', attr: '柔美', difficulty: 8, success: '雨滴顺着花瓣流下，柔美+2', gainExp: 6, attrs: {柔美:2} },
+            { text: '昂首迎接', attr: '绚烂', difficulty: 10, success: '雨后更加鲜艳，绚烂+2', gainExp: 8, attrs: {绚烂:2} }
+          ], failAttrs: {} },
+        { id: 'f5', form: FORMS.FLOWER, year: 5,
+          title: '结籽',
+          desc: '花瓣凋落，你开始结出种子。',
+          paths: [
+            { text: '留下希望', attr: '希望', difficulty: 12, success: '种子随风飘散，希望+2', gainExp: 10, attrs: {希望:2} },
+            { text: '回归大地', attr: '宁静', difficulty: 8, success: '化作春泥，宁静+2', gainExp: 6, attrs: {宁静:2} }
+          ], failAttrs: {} },
+        { id: 'f6', form: FORMS.FLOWER, year: 6,
+          title: '来年',
+          desc: '春天，你又从土里长出来，再次绽放。',
+          paths: [
+            { text: '再次绽放', attr: '绚烂', difficulty: 10, success: '比去年更美，绚烂+2', gainExp: 8, attrs: {绚烂:2} },
+            { text: '静静开放', attr: '宁静', difficulty: 6, success: '不争不抢，宁静+2', gainExp: 4, attrs: {宁静:2} }
+          ], failAttrs: {} },
+
+        // 月 (6个)
+        { id: 'm1', form: FORMS.MOON, year: 1,
+          title: '初升',
+          desc: '你第一次从地平线升起，挂在夜空。',
+          paths: [
+            { text: '洒下清辉', attr: '清辉', difficulty: 10, success: '月光如水，清辉+2', gainExp: 8, attrs: {清辉:2} },
+            { text: '静静悬挂', attr: '宁静', difficulty: 8, success: '就这样安静地待着，宁静+2', gainExp: 6, attrs: {宁静:2} }
+          ], failAttrs: {} },
+        { id: 'm2', form: FORMS.MOON, year: 2,
+          title: '望月',
+          desc: '地上有人抬头看着你，眼中带着思念。',
+          paths: [
+            { text: '温柔照耀', attr: '温柔', difficulty: 10, success: '让他感受到温暖，温柔+2', gainExp: 8, attrs: {温柔:2} },
+            { text: '静静陪伴', attr: '宁静', difficulty: 8, success: '陪他度过这个夜晚，宁静+2', gainExp: 6, attrs: {宁静:2} }
+          ], failAttrs: {} },
+        { id: 'm3', form: FORMS.MOON, year: 3,
+          title: '圆满',
+          desc: '今天是月圆之夜，你又大又圆。',
+          paths: [
+            { text: '绽放光芒', attr: '清辉', difficulty: 12, success: '照亮整个夜空，清辉+2', gainExp: 10, attrs: {清辉:2} },
+            { text: '接受祝福', attr: '温柔', difficulty: 8, success: '人们在庆祝团圆，温柔+2', gainExp: 6, attrs: {温柔:2} }
+          ], failAttrs: {} },
+        { id: 'm4', form: FORMS.MOON, year: 4,
+          title: '残缺',
+          desc: '月有阴晴圆缺，现在你缺了一块。',
+          paths: [
+            { text: '坦然接受', attr: '宁静', difficulty: 8, success: '残缺也是一种美，宁静+2', gainExp: 6, attrs: {宁静:2} },
+            { text: '等待圆满', attr: '希望', difficulty: 10, success: '再过几天又圆了，希望+2', gainExp: 8, attrs: {希望:2} }
+          ], failAttrs: {} },
+        { id: 'm5', form: FORMS.MOON, year: 5,
+          title: '云遮',
+          desc: '一片云飘过来，遮住了你。',
+          paths: [
+            { text: '等待云散', attr: '耐心', difficulty: 8, success: '云总会散的，耐心+2', gainExp: 6, attrs: {耐心:2} },
+            { text: '与云共舞', attr: '诗意', difficulty: 10, success: '云遮月，月穿云，诗意+2', gainExp: 8, attrs: {诗意:2} }
+          ], failAttrs: {} },
+        { id: 'm6', form: FORMS.MOON, year: 10,
+          title: '永恒',
+          desc: '你已经在夜空挂了无数个夜晚，看尽人间悲欢。',
+          paths: [
+            { text: '继续守望', attr: '永恒', difficulty: 12, success: '还会一直挂下去，永恒+2', gainExp: 10, attrs: {永恒:2} },
+            { text: '默默祝福', attr: '温柔', difficulty: 8, success: '愿人间美好，温柔+2', gainExp: 6, attrs: {温柔:2} }
+          ], failAttrs: {} },
+
+        // 麻将 (6个)
+        { id: 'mj1', form: FORMS.MAHJONG, year: 1,
+          title: '诞生',
+          desc: '你在工坊中被雕刻出来，红中二字鲜艳夺目。',
+          paths: [
+            { text: '期待未来', attr: '运气', difficulty: 10, success: '你会给谁带来好运呢？运气+2', gainExp: 8, attrs: {运气:2} },
+            { text: '静待有缘', attr: '沉稳', difficulty: 8, success: '静静等待，不急不躁，沉稳+2', gainExp: 6, attrs: {沉稳:2} }
+          ], failAttrs: {} },
+        { id: 'mj2', form: FORMS.MAHJONG, year: 2,
+          title: '第一局',
+          desc: '四个人围坐桌前，你被摸起。紧张又期待。',
+          paths: [
+            { text: '带来好运', attr: '运气', difficulty: 12, success: '那人大喊：杠上开花！运气+2', gainExp: 10, attrs: {运气:2} },
+            { text: '默默观察', attr: '机敏', difficulty: 10, success: '看他们打牌，很有趣，机敏+2', gainExp: 8, attrs: {机敏:2} }
+          ], failAttrs: {} },
+        { id: 'mj3', form: FORMS.MAHJONG, year: 3,
+          title: '洗牌声',
+          desc: '哗啦啦的洗牌声，是你最喜欢的音乐。',
+          paths: [
+            { text: '享受节奏', attr: '谐趣', difficulty: 8, success: '这声音让人安心，谐趣+2', gainExp: 6, attrs: {谐趣:2} },
+            { text: '准备下一局', attr: '机敏', difficulty: 10, success: '又要开始新的一局了，机敏+2', gainExp: 8, attrs: {机敏:2} }
+          ], failAttrs: {} },
+        { id: 'mj4', form: FORMS.MAHJONG, year: 4,
+          title: '胡牌',
+          desc: '你被摸起，那人喊道：胡了！',
+          paths: [
+            { text: '分享喜悦', attr: '谐趣', difficulty: 10, success: '大家都笑了，谐趣+2', gainExp: 8, attrs: {谐趣:2} },
+            { text: '淡然处之', attr: '沉稳', difficulty: 8, success: '输赢乃常事，沉稳+2', gainExp: 6, attrs: {沉稳:2} }
+          ], failAttrs: {} },
+        { id: 'mj5', form: FORMS.MAHJONG, year: 5,
+          title: '老友',
+          desc: '这张桌子的四个人是几十年的老朋友。',
+          paths: [
+            { text: '见证友情', attr: '温存', difficulty: 12, success: '看他们说说笑笑，温存+2', gainExp: 10, attrs: {温存:2} },
+            { text: '融入其中', attr: '谐趣', difficulty: 8, success: '你也成了他们的一部分，谐趣+2', gainExp: 6, attrs: {谐趣:2} }
+          ], failAttrs: {} },
+        { id: 'mj6', form: FORMS.MAHJONG, year: 10,
+          title: '传承',
+          desc: '这张麻将桌传给了下一代，你还在。',
+          paths: [
+            { text: '继续陪伴', attr: '恒久', difficulty: 10, success: '新的故事开始了，恒久+2', gainExp: 8, attrs: {恒久:2} },
+            { text: '回忆往事', attr: '沉稳', difficulty: 8, success: '想起从前的牌局，沉稳+2', gainExp: 6, attrs: {沉稳:2} }
+          ], failAttrs: {} },
+
+        // 节拍 (6个)
+        { id: 'bt1', form: FORMS.BEAT, year: 1,
+          title: '第一声鼓',
+          desc: '你是一声鼓点，在寂静中响起。咚——',
+          paths: [
+            { text: '继续敲击', attr: '律动', difficulty: 8, success: '咚哒咚哒，有了节奏，律动+2', gainExp: 6, attrs: {律动:2} },
+            { text: '等待回应', attr: '节奏', difficulty: 10, success: '另一个鼓点回应了你，节奏+2', gainExp: 8, attrs: {节奏:2} }
+          ], failAttrs: {} },
+        { id: 'bt2', form: FORMS.BEAT, year: 2,
+          title: '一起摇摆',
+          desc: '越来越多的人跟着你的节奏摇摆。',
+          paths: [
+            { text: '加快节奏', attr: '感染力', difficulty: 12, success: '大家都跳起来了！感染力+2', gainExp: 10, attrs: {感染力:2} },
+            { text: '保持稳定', attr: '律动', difficulty: 10, success: '稳稳的节奏让人安心，律动+2', gainExp: 8, attrs: {律动:2} }
+          ], failAttrs: {} },
+        { id: 'bt3', form: FORMS.BEAT, year: 3,
+          title: '乐队',
+          desc: '你加入了乐队，和其他乐器一起演奏。',
+          paths: [
+            { text: '配合他们', attr: '节奏', difficulty: 12, success: '配合得天衣无缝，节奏+2', gainExp: 10, attrs: {节奏:2} },
+            { text: '引领大家', attr: '感染力', difficulty: 14, success: '大家都跟着你的节奏，感染力+2', gainExp: 12, attrs: {感染力:2} }
+          ], failAttrs: {} },
+        { id: 'bt4', form: FORMS.BEAT, year: 4,
+          title: '心跳',
+          desc: '你发现，每个生命都有自己的心跳节拍。',
+          paths: [
+            { text: '与之共鸣', attr: '律动', difficulty: 10, success: '和心跳一起律动，律动+2', gainExp: 8, attrs: {律动:2} },
+            { text: '静静倾听', attr: '温存', difficulty: 8, success: '感受生命的节奏，温存+2', gainExp: 6, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'bt5', form: FORMS.BEAT, year: 5,
+          title: '永不停息',
+          desc: '你一直敲着，从不停歇。',
+          paths: [
+            { text: '永恒律动', attr: '永恒', difficulty: 12, success: '节奏永远不会停，永恒+2', gainExp: 10, attrs: {永恒:2} },
+            { text: '偶尔休止', attr: '节奏', difficulty: 8, success: '休止符也很重要，节奏+2', gainExp: 6, attrs: {节奏:2} }
+          ], failAttrs: {} },
+        { id: 'bt6', form: FORMS.BEAT, year: 10,
+          title: '生命的节奏',
+          desc: '你明白了，一切都是节奏。生与死，起与落。',
+          paths: [
+            { text: '继续敲击', attr: '律动', difficulty: 10, success: '咚哒咚哒，生生不息，律动+2', gainExp: 8, attrs: {律动:2} },
+            { text: '融入永恒', attr: '永恒', difficulty: 12, success: '成为宇宙的节奏，永恒+2', gainExp: 10, attrs: {永恒:2} }
+          ], failAttrs: {} },
+
+        // 旋律 (6个)
+        { id: 'ml1', form: FORMS.MELODY, year: 1,
+          title: '第一首歌',
+          desc: '你是一段旋律，从琴弦上流淌出来。',
+          paths: [
+            { text: '轻轻哼唱', attr: '优美', difficulty: 8, success: '声音真好听，优美+2', gainExp: 6, attrs: {优美:2} },
+            { text: '自由流淌', attr: '灵动', difficulty: 10, success: '随心所欲，自由自在，灵动+2', gainExp: 8, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'ml2', form: FORMS.MELODY, year: 2,
+          title: '有人跟唱',
+          desc: '有人跟着你的旋律轻轻哼唱。',
+          paths: [
+            { text: '带领他', attr: '感染力', difficulty: 10, success: '他唱得越来越好，感染力+2', gainExp: 8, attrs: {感染力:2} },
+            { text: '和他合唱', attr: '优美', difficulty: 12, success: '二重奏真美，优美+2', gainExp: 10, attrs: {优美:2} }
+          ], failAttrs: {} },
+        { id: 'ml3', form: FORMS.MELODY, year: 3,
+          title: '治愈',
+          desc: '有个悲伤的人听了你的旋律，露出了微笑。',
+          paths: [
+            { text: '轻轻抚慰', attr: '温柔', difficulty: 12, success: '他不再难过了，温柔+2', gainExp: 10, attrs: {温柔:2} },
+            { text: '带来希望', attr: '希望', difficulty: 10, success: '他重新燃起希望，希望+2', gainExp: 8, attrs: {希望:2} }
+          ], failAttrs: {} },
+        { id: 'ml4', form: FORMS.MELODY, year: 4,
+          title: '记忆',
+          desc: '你的旋律让人想起美好的往事。',
+          paths: [
+            { text: '唤醒回忆', attr: '感染力', difficulty: 10, success: '他眼中闪着泪光，感染力+2', gainExp: 8, attrs: {感染力:2} },
+            { text: '创造新的', attr: '灵动', difficulty: 12, success: '新的美好正在发生，灵动+2', gainExp: 10, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'ml5', form: FORMS.MELODY, year: 5,
+          title: '传承',
+          desc: '有人学会了你的旋律，继续传唱。',
+          paths: [
+            { text: '欣慰', attr: '温柔', difficulty: 8, success: '旋律会一直流传下去，温柔+2', gainExp: 6, attrs: {温柔:2} },
+            { text: '创新', attr: '灵动', difficulty: 10, success: '他又加入了新的音符，灵动+2', gainExp: 8, attrs: {灵动:2} }
+          ], failAttrs: {} },
+        { id: 'ml6', form: FORMS.MELODY, year: 10,
+          title: '永恒之歌',
+          desc: '你的旋律成了经典，被人们永远铭记。',
+          paths: [
+            { text: '感谢倾听', attr: '温存', difficulty: 8, success: '谢谢每一个听歌的人，温存+2', gainExp: 6, attrs: {温存:2} },
+            { text: '继续创作', attr: '优美', difficulty: 12, success: '新的旋律正在酝酿，优美+2', gainExp: 10, attrs: {优美:2} }
+          ], failAttrs: {} },
+
+        // DISCO (6个)
+        { id: 'ds1', form: FORMS.DISCO, year: 1,
+          title: '霓虹初上',
+          desc: '你是一束霓虹光，在舞池上方闪烁。',
+          paths: [
+            { text: '变换颜色', attr: '光芒', difficulty: 10, success: '红橙黄绿，真好看，光芒+2', gainExp: 8, attrs: {光芒:2} },
+            { text: '随着节奏', attr: '律动', difficulty: 8, success: '一闪一闪，跟着音乐，律动+2', gainExp: 6, attrs: {律动:2} }
+          ], failAttrs: {} },
+        { id: 'ds2', form: FORMS.DISCO, year: 2,
+          title: '舞池中央',
+          desc: '所有人都在舞池里，跟着你的节奏摇摆。',
+          paths: [
+            { text: '更闪亮', attr: '光芒', difficulty: 12, success: '大家跳得更嗨了！光芒+2', gainExp: 10, attrs: {光芒:2} },
+            { text: '调动气氛', attr: '感染力', difficulty: 14, success: '气氛燃爆了！感染力+2', gainExp: 12, attrs: {感染力:2} }
+          ], failAttrs: {} },
+        { id: 'ds3', form: FORMS.DISCO, year: 3,
+          title: '经典舞步',
+          desc: '有人在你的光芒下跳起了经典的DISCO舞步。',
+          paths: [
+            { text: '为他打光', attr: '光芒', difficulty: 10, success: '他成了全场焦点，光芒+2', gainExp: 8, attrs: {光芒:2} },
+            { text: '一起摇摆', attr: '律动', difficulty: 8, success: '你也跟着节奏晃动，律动+2', gainExp: 6, attrs: {律动:2} }
+          ], failAttrs: {} },
+        { id: 'ds4', form: FORMS.DISCO, year: 4,
+          title: '永不落幕',
+          desc: '派对从晚上开到了清晨，你还在闪烁。',
+          paths: [
+            { text: '继续闪耀', attr: '永恒', difficulty: 12, success: '永不熄灭的光，永恒+2', gainExp: 10, attrs: {永恒:2} },
+            { text: '温柔收场', attr: '温柔', difficulty: 8, success: '慢慢暗下，温柔+2', gainExp: 6, attrs: {温柔:2} }
+          ], failAttrs: {} },
+        { id: 'ds5', form: FORMS.DISCO, year: 5,
+          title: '新朋友',
+          desc: '新的舞者加入，新的DISCO球加入。',
+          paths: [
+            { text: '欢迎他们', attr: '交游', difficulty: 8, success: '一起照亮舞池，交游+2', gainExp: 6, attrs: {交游:2} },
+            { text: '分享光芒', attr: '光芒', difficulty: 10, success: '大家一起闪耀，光芒+2', gainExp: 8, attrs: {光芒:2} }
+          ], failAttrs: {} },
+        { id: 'ds6', form: FORMS.DISCO, year: 10,
+          title: 'DISCO永恒',
+          desc: 'DISCO永远不会死，你永远在这里。',
+          paths: [
+            { text: '继续舞动', attr: '律动', difficulty: 10, success: '咚哒咚哒，继续摇摆，律动+2', gainExp: 8, attrs: {律动:2} },
+            { text: '照亮新的一代', attr: '希望', difficulty: 12, success: '新的年轻人也爱上DISCO，希望+2', gainExp: 10, attrs: {希望:2} }
+          ], failAttrs: {} },
+
+        // 仙子 (6个)
+        { id: 'fa1', form: FORMS.FAIRY, year: 1,
+          title: '诞生',
+          desc: '你从一朵花中诞生，浑身洒满星光。',
+          paths: [
+            { text: '轻轻飞舞', attr: '优雅', difficulty: 8, success: '飞起来的感觉真好，优雅+2', gainExp: 6, attrs: {优雅:2} },
+            { text: '洒下星光', attr: '可爱', difficulty: 10, success: '星光点点，真美，可爱+2', gainExp: 8, attrs: {可爱:2} }
+          ], failAttrs: {} },
+        { id: 'fa2', form: FORMS.FAIRY, year: 2,
+          title: '催花',
+          desc: '你飞过一片花丛，花儿们竞相开放。',
+          paths: [
+            { text: '让花开', attr: '灵性', difficulty: 12, success: '花儿们感谢你，灵性+2', gainExp: 10, attrs: {灵性:2} },
+            { text: '和花说话', attr: '温存', difficulty: 8, success: '听花儿讲心事，温存+2', gainExp: 6, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'fa3', form: FORMS.FAIRY, year: 3,
+          title: '伴眠',
+          desc: '有个小孩睡不着，你在他床边轻轻飞舞。',
+          paths: [
+            { text: '洒下美梦', attr: '温柔', difficulty: 10, success: '他很快睡着了，温柔+2', gainExp: 8, attrs: {温柔:2} },
+            { text: '守护一夜', attr: '温存', difficulty: 12, success: '静静守着他到天亮，温存+2', gainExp: 10, attrs: {温存:2} }
+          ], failAttrs: {} },
+        { id: 'fa4', form: FORMS.FAIRY, year: 4,
+          title: '朋友',
+          desc: '你遇到一只蝴蝶，你们成了朋友。',
+          paths: [
+            { text: '一起飞舞', attr: '优雅', difficulty: 8, success: '翩翩起舞，优雅+2', gainExp: 6, attrs: {优雅:2} },
+            { text: '分享星光', attr: '可爱', difficulty: 10, success: '蝴蝶身上也有了星光，可爱+2', gainExp: 8, attrs: {可爱:2} }
+          ], failAttrs: {} },
+        { id: 'fa5', form: FORMS.FAIRY, year: 5,
+          title: '月下',
+          desc: '夜晚，你在月光下起舞。',
+          paths: [
+            { text: '与月共舞', attr: '灵性', difficulty: 10, success: '月光洒在你身上，灵性+2', gainExp: 8, attrs: {灵性:2} },
+            { text: '安静仰望', attr: '宁静', difficulty: 8, success: '月亮真美，宁静+2', gainExp: 6, attrs: {宁静:2} }
+          ], failAttrs: {} },
+        { id: 'fa6', form: FORMS.FAIRY, year: 10,
+          title: '传承',
+          desc: '新的小仙子诞生了，你想教导她。',
+          paths: [
+            { text: '耐心教导', attr: '耐心', difficulty: 10, success: '她学得很快，耐心+2', gainExp: 8, attrs: {耐心:2} },
+            { text: '让她探索', attr: '随性', difficulty: 8, success: '让她自己去发现世界，随性+2', gainExp: 6, attrs: {随性:2} }
+          ], failAttrs: {} },
+
+        // 星 (6个)
+        { id: 'st1', form: FORMS.STAR, year: 1,
+          title: '点亮',
+          desc: '你在夜空中第一次亮起，小小的，但很坚定。',
+          paths: [
+            { text: '努力发光', attr: '光芒', difficulty: 10, success: '虽然小，但很亮，光芒+2', gainExp: 8, attrs: {光芒:2} },
+            { text: '静静闪烁', attr: '宁静', difficulty: 8, success: '一闪一闪，宁静+2', gainExp: 6, attrs: {宁静:2} }
+          ], failAttrs: {} },
+        { id: 'st2', form: FORMS.STAR, year: 2,
+          title: '许愿',
+          desc: '有个孩子看着你，许下了一个愿望。',
+          paths: [
+            { text: '听他许愿', attr: '温存', difficulty: 8, success: '希望他的愿望成真，温存+2', gainExp: 6, attrs: {温存:2} },
+            { text: '眨眨眼', attr: '可爱', difficulty: 6, success: '他看到你眨眼，笑了，可爱+2', gainExp: 4, attrs: {可爱:2} }
+          ], failAttrs: {} },
+        { id: 'st3', form: FORMS.STAR, year: 3,
+          title: '指路',
+          desc: '有个迷路的人，看着你找到了方向。',
+          paths: [
+            { text: '照亮前路', attr: '光芒', difficulty: 12, success: '他安全到家了，光芒+2', gainExp: 10, attrs: {光芒:2} },
+            { text: '默默陪伴', attr: '温柔', difficulty: 8, success: '陪他走完夜路，温柔+2', gainExp: 6, attrs: {温柔:2} }
+          ], failAttrs: {} },
+        { id: 'st4', form: FORMS.STAR, year: 4,
+          title: '星座',
+          desc: '你和周围的星星连成了一个星座。',
+          paths: [
+            { text: '成为图案', attr: '优雅', difficulty: 10, success: '真美啊，优雅+2', gainExp: 8, attrs: {优雅:2} },
+            { text: '保持独立', attr: '独立', difficulty: 8, success: '还是喜欢独自闪烁，独立+2', gainExp: 6, attrs: {独立:2} }
+          ], failAttrs: {} },
+        { id: 'st5', form: FORMS.STAR, year: 5,
+          title: '流星',
+          desc: '一颗流星划过，你也要去吗？',
+          paths: [
+            { text: '划过天际', attr: '光芒', difficulty: 14, success: '成为最美的流星，光芒+2', gainExp: 12, attrs: {光芒:2} },
+            { text: '留在原位', attr: '永恒', difficulty: 10, success: '还是在这里静静闪烁，永恒+2', gainExp: 8, attrs: {永恒:2} }
+          ], failAttrs: {} },
+        { id: 'st6', form: FORMS.STAR, year: 10,
+          title: '永恒',
+          desc: '你已经在夜空挂了很久很久，还会一直挂下去。',
+          paths: [
+            { text: '继续闪烁', attr: '永恒', difficulty: 12, success: '永远在这里，永恒+2', gainExp: 10, attrs: {永恒:2} },
+            { text: '祝福人间', attr: '希望', difficulty: 8, success: '愿人间永远美好，希望+2', gainExp: 6, attrs: {希望:2} }
+          ], failAttrs: {} }
+    ];
+
+    // ============================================================
+    // 美好回忆库
+    // ============================================================
+    const memoriesDatabase = {
+        [FORMS.SCHOLAR]: [
+            { id: 's1', name: '开卷', desc: '翻开书卷，墨香沁人心脾', effect: {慧心: 3}, diceBonus: {慧心: 2} },
+            { id: 's2', name: '得句', desc: '偶得佳句，反复吟咏', effect: {文采: 3}, diceBonus: {文采: 2} },
+            { id: 's3', name: '赠书', desc: '友人赠书一卷，欣喜不已', effect: {怡然: 3}, diceBonus: {怡然: 1} }
+        ],
+        [FORMS.ARTIST]: [
+            { id: 'a1', name: '写生', desc: '对景写生，捕捉光影', effect: {灵性: 3}, diceBonus: {灵性: 2} },
+            { id: 'a2', name: '新色', desc: '得新颜料，试画一幅', effect: {怡然: 3}, diceBonus: {怡然: 2} },
+            { id: 'a3', name: '观云', desc: '看云卷云舒，心有感悟', effect: {洞察: 3}, diceBonus: {洞察: 2} }
+        ],
+        [FORMS.POET]: [
+            { id: 'p1', name: '寻句', desc: '漫步林间，偶得诗句', effect: {文采: 3}, diceBonus: {文采: 2} },
+            { id: 'p2', name: '吟咏', desc: '对月吟诗，心有所感', effect: {灵性: 3}, diceBonus: {灵性: 2} },
+            { id: 'p3', name: '赠诗', desc: '友人求诗，欣然命笔', effect: {怡然: 3}, diceBonus: {怡然: 2} }
+        ],
+        [FORMS.CAT]: [
+            { id: 'c1', name: '沐阳', desc: '窗台暖阳，慵懒而卧', effect: {温存: 3}, diceBonus: {温存: 2} },
+            { id: 'c2', name: '戏球', desc: '毛球滚动，追逐嬉戏', effect: {灵动: 3}, diceBonus: {灵动: 2} },
+            { id: 'c3', name: '依偎', desc: '依偎主人，轻声呼噜', effect: {可爱: 3}, diceBonus: {可爱: 2} }
+        ],
+        [FORMS.DOG]: [
+            { id: 'd1', name: '迎归', desc: '见主人归，摇尾雀跃', effect: {怡然: 4}, diceBonus: {怡然: 2} },
+            { id: 'd2', name: '逐飞盘', desc: '飞盘高抛，一跃接住', effect: {生气: 4}, diceBonus: {生气: 2} },
+            { id: 'd3', name: '伴眠', desc: '卧于足边，安然入梦', effect: {温存: 3}, diceBonus: {温存: 2} }
+        ],
+        [FORMS.RABBIT]: [
+            { id: 'r1', name: '食青', desc: '晨露未干，啃食青草', effect: {恬淡: 3}, diceBonus: {恬淡: 2} },
+            { id: 'r2', name: '跃涧', desc: '轻跃小溪，姿态轻盈', effect: {灵动: 3}, diceBonus: {灵动: 2} },
+            { id: 'r3', name: '沐月', desc: '月下静坐，听风入眠', effect: {温良: 3}, diceBonus: {温良: 2} }
+        ],
+        [FORMS.SQUIRREL]: [
+            { id: 'sq1', name: '藏果', desc: '藏好松果，以备冬日', effect: {勤勉: 3}, diceBonus: {勤勉: 2} },
+            { id: 'sq2', name: '跃枝', desc: '在树枝间跳跃，轻盈自如', effect: {灵动: 3}, diceBonus: {灵动: 2} },
+            { id: 'sq3', name: '秋千', desc: '藤蔓荡起，随风摇曳', effect: {怡然: 3}, diceBonus: {怡然: 2} }
+        ],
+        [FORMS.SWALLOW]: [
+            { id: 'sw1', name: '筑巢', desc: '衔泥筑巢，安家屋檐', effect: {耐心: 3}, diceBonus: {耐心: 2} },
+            { id: 'sw2', name: '归途', desc: '春来归巢，不忘旧家', effect: {方向: 4}, diceBonus: {方向: 2} },
+            { id: 'sw3', name: '哺雏', desc: '喂食幼鸟，温柔呵护', effect: {温存: 3}, diceBonus: {温存: 2} }
+        ],
+        [FORMS.STREAM]: [
+            { id: 'st1', name: '映月', desc: '溪水映月，波光粼粼', effect: {澄澈: 3}, diceBonus: {澄澈: 2} },
+            { id: 'st2', name: '穿石', desc: '细水长流，终能穿石', effect: {柔韧: 3}, diceBonus: {柔韧: 2} },
+            { id: 'st3', name: '润物', desc: '滋润岸边的花草', effect: {滋养: 3}, diceBonus: {滋养: 2} }
+        ],
+        [FORMS.STONE]: [
+            { id: 'stn1', name: '听风', desc: '山石听风，静观云起', effect: {宁静: 3}, diceBonus: {宁静: 2} },
+            { id: 'stn2', name: '经年', desc: '历经风雨，愈发沉稳', effect: {坚韧: 3}, diceBonus: {坚韧: 2} },
+            { id: 'stn3', name: '苔生', desc: '石上生苔，岁月留痕', effect: {恒久: 3}, diceBonus: {恒久: 2} }
+        ],
+        [FORMS.CLOUD]: [
+            { id: 'cl1', name: '舒卷', desc: '随风舒卷，自在逍遥', effect: {自在: 3}, diceBonus: {自在: 2} },
+            { id: 'cl2', name: '映霞', desc: '朝霞映身，绚烂一时', effect: {轻盈: 3}, diceBonus: {轻盈: 2} },
+            { id: 'cl3', name: '化雨', desc: '化而为雨，滋润大地', effect: {滋养: 3}, diceBonus: {滋养: 2} }
+        ],
+        [FORMS.TREE]: [
+            { id: 'tr1', name: '根深', desc: '根扎得深，不畏风雨', effect: {根深: 3}, diceBonus: {根深: 2} },
+            { id: 'tr2', name: '荫蔽', desc: '枝叶繁茂，为人遮荫', effect: {滋养: 3}, diceBonus: {滋养: 2} },
+            { id: 'tr3', name: '年轮', desc: '一圈年轮，一岁枯荣', effect: {恒久: 3}, diceBonus: {恒久: 2} }
+        ],
+        [FORMS.FLOWER]: [
+            { id: 'fl1', name: '绽放', desc: '一朝绽放，绚烂夺目', effect: {绚烂: 3}, diceBonus: {绚烂: 2} },
+            { id: 'fl2', name: '引蝶', desc: '花香引来蝴蝶驻足', effect: {芬芳: 3}, diceBonus: {芬芳: 2} },
+            { id: 'fl3', name: '结籽', desc: '花落结籽，期待来年', effect: {希望: 3}, diceBonus: {希望: 2} }
+        ],
+        [FORMS.MOON]: [
+            { id: 'mn1', name: '圆满', desc: '月圆之夜，清辉遍洒', effect: {清辉: 3}, diceBonus: {清辉: 2} },
+            { id: 'mn2', name: '照人', desc: '月光如水，照见归人', effect: {温柔: 3}, diceBonus: {温柔: 2} },
+            { id: 'mn3', name: '听愿', desc: '听人许愿，默默祝福', effect: {诗意: 3}, diceBonus: {诗意: 2} }
+        ],
+        [FORMS.MAHJONG]: [
+            { id: 'mj1', name: '杠上开花', desc: '运气爆棚，杠上开花', effect: {运气: 4}, diceBonus: {运气: 2} },
+            { id: 'mj2', name: '清一色', desc: '牌面整齐，心境澄明', effect: {机敏: 3}, diceBonus: {机敏: 2} },
+            { id: 'mj3', name: '海底捞月', desc: '最后一张摸到好牌', effect: {沉稳: 3}, diceBonus: {沉稳: 2} }
+        ],
+        [FORMS.BEAT]: [
+            { id: 'bt1', name: '心跳', desc: '咚哒咚哒，生命律动', effect: {律动: 4}, diceBonus: {律动: 2} },
+            { id: 'bt2', name: '鼓点', desc: '节奏强烈，让人摇摆', effect: {活力: 3}, diceBonus: {活力: 2} },
+            { id: 'bt3', name: '共鸣', desc: '所有人都跟着拍手', effect: {感染力: 3}, diceBonus: {感染力: 2} }
+        ],
+        [FORMS.MELODY]: [
+            { id: 'ml1', name: '天籁', desc: '优美旋律，动人心弦', effect: {优美: 4}, diceBonus: {优美: 2} },
+            { id: 'ml2', name: '即兴', desc: '随手弹奏，自成曲调', effect: {灵动: 3}, diceBonus: {灵动: 2} },
+            { id: 'ml3', name: '余音绕梁', desc: '曲终人不散，余音袅袅', effect: {感染力: 3}, diceBonus: {感染力: 2} }
+        ],
+        [FORMS.DISCO]: [
+            { id: 'ds1', name: '霓虹闪烁', desc: '五彩灯光，如梦似幻', effect: {光芒: 4}, diceBonus: {光芒: 2} },
+            { id: 'ds2', name: '舞池中央', desc: '所有人都在为你欢呼', effect: {感染力: 4}, diceBonus: {感染力: 2} },
+            { id: 'ds3', name: '永恒节奏', desc: '一直跳到天亮', effect: {律动: 4}, diceBonus: {律动: 2} }
+        ],
+        [FORMS.FAIRY]: [
+            { id: 'fa1', name: '洒星', desc: '指尖轻点，星光洒落', effect: {可爱: 4}, diceBonus: {可爱: 2} },
+            { id: 'fa2', name: '催花', desc: '所到之处，花开遍地', effect: {灵性: 4}, diceBonus: {灵性: 2} },
+            { id: 'fa3', name: '伴眠', desc: '伴孩童入眠，守护梦境', effect: {温存: 4}, diceBonus: {温存: 2} }
+        ],
+        [FORMS.STAR]: [
+            { id: 'st1', name: '闪烁', desc: '夜空闪烁，引人仰望', effect: {光芒: 4}, diceBonus: {光芒: 2} },
+            { id: 'st2', name: '听愿', desc: '听见人间愿望，默默祝福', effect: {希望: 4}, diceBonus: {希望: 2} },
+            { id: 'st3', name: '长明', desc: '恒久长明，照亮归途', effect: {温存: 4}, diceBonus: {温存: 2} }
+        ]
+    };
+
+    // ============================================================
+    // 游戏状态
+    // ============================================================
+    let gameState = {
+        currentForm: null,
+        attrs: {},
+        memories: [],
+        exp: 50,
+        timeline: [],
+        currentYear: 0,
+        storyCount: 0,
+        pendingDice: null,
+        showingNewLife: false,
+        selectedForm: null,
+        newLifeOptions: [],
+        gameEnded: false,
+        endingMessage: null,
+        notification: null,
+        showWelcome: true,
+        usedStories: [],
+        audioEnabled: false
+    };
+
+    // ============================================================
+    // 幸运骰子系统
+    // ============================================================
+    function rollDice() {
+        return Math.floor(Math.random() * 20) + 1;
+    }
+
+    function getDiceBonus(attrName, state) {
+        let bonus = 0;
+        state.memories.forEach(id => {
+            const memories = memoriesDatabase[state.currentForm] || [];
+            const memory = memories.find(m => m.id === id);
+            if (memory && memory.diceBonus) {
+                if (memory.diceBonus[attrName]) {
+                    bonus += memory.diceBonus[attrName];
+                }
+            }
+        });
+        return bonus;
+    }
+
+    function getDifficultyReduce(attrName, state) {
+        let reduce = 0;
+        state.memories.forEach(id => {
+            const memories = memoriesDatabase[state.currentForm] || [];
+            const memory = memories.find(m => m.id === id);
+            if (memory && memory.difficultyReduce && memory.difficultyReduce[attrName]) {
+                reduce += memory.difficultyReduce[attrName];
+            }
+        });
+        return reduce;
+    }
+
+    function tryGetMemory() {
+        if (Math.random() > 0.2) return false;
+        const memories = memoriesDatabase[gameState.currentForm] || [];
+        if (memories.length === 0) return false;
+        const notYet = memories.filter(m => !gameState.memories.includes(m.id));
+        if (notYet.length === 0) return false;
+        const memory = notYet[Math.floor(Math.random() * notYet.length)];
+        gameState.memories.push(memory.id);
+        if (memory.effect) {
+            gameState.attrs = applyAttrChanges(gameState.attrs, memory.effect);
+        }
+        if (gameState.audioEnabled) AudioSystem.playMemory();
+        gameState.notification = `✨ 忆起「${memory.name}」`;
+        setTimeout(() => {
+            gameState.notification = null;
+            render();
+        }, 3000);
+        return true;
+    }
+
+    function resolveDiceCheck(attrName, baseDifficulty, state) {
+        let dice = rollDice();
+        let bonus = getDiceBonus(attrName, state);
+        let difficulty = baseDifficulty - getDifficultyReduce(attrName, state);
+        return {
+            dice: dice,
+            finalDice: dice,
+            bonus: bonus,
+            difficulty: Math.max(1, difficulty),
+            success: (dice + bonus) >= Math.max(1, difficulty),
+            lucky: dice === 20,
+            unlucky: dice === 1
+        };
+    }
+
+    // ============================================================
+    // 核心逻辑
+    // ============================================================
+    function enableAudio() {
+        gameState.audioEnabled = true;
+        AudioSystem.enable();
+        render();
+    }
+
+    function startNewGame(formId) {
+        const form = formsDatabase[formId];
+        if (!form) return;
+        
+        gameState.currentForm = formId;
+        gameState.attrs = { ...form.baseAttrs };
+        gameState.memories = [];
+        gameState.timeline = [];
+        gameState.storyCount = 0;
+        gameState.showWelcome = false;
+        gameState.showingNewLife = false;
+        gameState.gameEnded = false;
+        gameState.exp = 50;
+        gameState.usedStories = [];
+        
+        render();
+    }
+
+    function handleChoice(choiceIdx) {
+        if (gameState.showingNewLife || gameState.gameEnded || gameState.showWelcome) return;
+        
+        const currentStory = getCurrentStory();
+        if (!currentStory) {
+            showNewLifeOptions();
+            return;
+        }
+        
+        const path = currentStory.paths[choiceIdx];
+        if (!path) return;
+
+        if (gameState.audioEnabled) AudioSystem.playDiceRoll();
+        const diceResult = resolveDiceCheck(path.attr, path.difficulty, gameState);
+        const isSuccess = diceResult.success;
+        const beforeAttrs = copyAttrs(gameState.attrs);
+
+        let resultText = '';
+        let expGain = 0;
+        let attrChanges = {};
+
+        if (isSuccess) {
+            resultText = path.success || '成功！';
+            expGain = path.gainExp || 10;
+            attrChanges = path.attrs || {};
+            if (diceResult.lucky) {
+                if (gameState.audioEnabled) AudioSystem.playLucky();
+                resultText = '✨ 大吉！' + resultText;
+            } else {
+                if (gameState.audioEnabled) AudioSystem.playSuccess();
+            }
+        } else {
+            resultText = currentStory.failText || '下次会更好';
+            expGain = 0;
+            attrChanges = currentStory.failAttrs || {};
+        }
+
+        gameState.attrs = applyAttrChanges(gameState.attrs, attrChanges);
+        gameState.exp += expGain;
+        gameState.storyCount += 1;
+        gameState.currentYear = currentStory.year;
+
+        tryGetMemory();
+
+        if (!gameState.usedStories) gameState.usedStories = [];
+        gameState.usedStories.push(currentStory.id);
+
+        gameState.timeline.push({
+            storyId: currentStory.id,
+            storyTitle: currentStory.title,
+            year: currentStory.year,
+            path: path.text,
+            diceResult: diceResult.finalDice,
+            diceBonus: diceResult.bonus,
+            difficulty: diceResult.difficulty,
+            success: isSuccess,
+            lucky: diceResult.lucky,
+            attrsBefore: beforeAttrs,
+            attrsAfter: copyAttrs(gameState.attrs),
+            expGain: expGain
+        });
+
+        gameState.pendingDice = {
+            dice: diceResult.dice,
+            finalDice: diceResult.finalDice,
+            bonus: diceResult.bonus,
+            total: diceResult.finalDice + diceResult.bonus,
+            difficulty: diceResult.difficulty,
+            success: isSuccess,
+            text: resultText,
+            exp: expGain,
+            lucky: diceResult.lucky
+        };
+
+        // 检查是否还有未使用的故事
+        const allStories = lifeStories.filter(s => s.form === gameState.currentForm);
+        const unusedStories = allStories.filter(s => !gameState.usedStories?.includes(s.id));
+        
+        if (unusedStories.length === 0 && !gameState.gameEnded) {
+            showNewLifeOptions();
+        }
+
+        render();
+    }
+
+    function showNewLifeOptions() {
+        let options = [];
+        for (let f in formsDatabase) {
+            if (f === gameState.currentForm) continue;
+            const form = formsDatabase[f];
+            let available = true;
+            if (form.unlockCondition) {
+                available = form.unlockCondition(gameState);
+            }
+            options.push({
+                formId: f,
+                name: form.name,
+                desc: form.description,
+                available: available,
+                emoji: form.emoji
+            });
+        }
+        gameState.newLifeOptions = options;
+        gameState.showingNewLife = true;
+        render();
+    }
+
+    function startNewLife(formId) {
+        const target = formsDatabase[formId];
+        if (!target) return;
+        
+        gameState.currentForm = formId;
+        gameState.attrs = target.transform(gameState.attrs);
+        gameState.currentYear = 0;
+        gameState.showingNewLife = false;
+        gameState.storyCount = 0;
+        gameState.memories = [];
+        gameState.usedStories = [];
+        gameState.gameEnded = false;
+        
+        gameState.timeline.push({
+            storyId: 'NEW_LIFE',
+            storyTitle: `✨ 新生：化为${target.name}`,
+            year: 0,
+            path: '新生',
+            success: true,
+            attrsBefore: null,
+            attrsAfter: copyAttrs(gameState.attrs),
+            expGain: 0
+        });
+        
+        render();
+    }
+
+    function lookBack(index) {
+        if (index < 0 || index >= gameState.timeline.length || gameState.gameEnded || gameState.showWelcome) return;
+        if (gameState.exp < 15) {
+            alert('阅历不足');
+            return;
+        }
+        gameState.exp -= 15;
+        gameState.attrs = copyAttrs(gameState.timeline[index].attrsBefore);
+        gameState.timeline = gameState.timeline.slice(0, index);
+        gameState.storyCount = gameState.timeline.filter(t => t.storyId !== 'NEW_LIFE').length;
+        gameState.usedStories = gameState.timeline.map(t => t.storyId).filter(id => id !== 'NEW_LIFE');
+        gameState.showingNewLife = false;
+        gameState.gameEnded = false;
+        render();
+    }
+
+    // ============================================================
+    // 辅助函数
+    // ============================================================
+    function copyAttrs(attrs) {
+        return {...attrs};
+    }
+
+    function applyAttrChanges(attrs, changes) {
+        if (!changes) return attrs;
+        let newAttrs = {...attrs};
+        for (let [k, v] of Object.entries(changes)) {
+            newAttrs[k] = Math.min(100, Math.max(0, (newAttrs[k] || 0) + v));
+        }
+        return newAttrs;
+    }
+
+    function getCurrentStory() {
+        if (gameState.showingNewLife || gameState.gameEnded || gameState.showWelcome) return null;
+        
+        const stories = lifeStories.filter(s => s.form === gameState.currentForm);
+        if (stories.length === 0) return null;
+        
+        const unusedStories = stories.filter(s => !gameState.usedStories?.includes(s.id));
+        if (unusedStories.length === 0) return null;
+        
+        unusedStories.sort((a, b) => a.year - b.year);
+        return unusedStories[0];
+    }
+
+    // ============================================================
+    // 渲染
+    // ============================================================
+    function render() {
+        const root = document.getElementById('gameRoot');
+        if (!root) return;
+
+        let html = '';
+
+        if (gameState.notification) {
+            html += `<div class="notification">${gameState.notification}</div>`;
+        }
+
+        if (gameState.showWelcome) {
+            html += renderWelcome();
+        } else {
+            const formData = formsDatabase[gameState.currentForm];
+            const formName = formData?.name || '';
+            const expPercent = Math.min(100, (gameState.exp / 100) * 100);
+
+            html += `
+                <div class="header">
+                    <span class="badge">${formName}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color:#ffff00;">✨${gameState.exp}</span>
+                        <div class="exp-bar"><div class="exp-fill" style="width: ${expPercent}%;"></div></div>
+                        ${!gameState.audioEnabled ? 
+                            '<button class="secondary" style="padding:4px 12px; font-size:10px;" onclick="window.__enableAudio()">🔊 开启DISCO</button>' : 
+                            '<span style="color:#00ffff;">🎵 DISCO ON</span>'}
+                    </div>
+                </div>
+            `;
+
+            html += `<div class="stats-panel">`;
+            html += `<div class="attrs-panel">`;
+            for (let [key, value] of Object.entries(gameState.attrs)) {
+                html += `<div class="attr-item"><span class="attr-name">${key}</span><span class="attr-value">${value}</span></div>`;
+            }
+            html += `</div>`;
+            
+            html += `
+                <div class="memory-panel">
+                    <div><span class="memory-icon">✨</span> <span class="memory-count">${gameState.memories.length}</span></div>
+                    <div style="font-size:8px; color:#ffff00;">忆念</div>
+                </div>
+            `;
+            html += `</div>`;
+
+            html += `
+                <div class="dice-panel">
+                    <span class="dice-icon">🎲</span>
+                    <span>掷出你的命运</span>
+                    <span class="dice-bonus">+${gameState.memories.length}</span>
+                </div>
+            `;
+
+            if (gameState.timeline.length > 0 && !gameState.gameEnded) {
+                html += `<div class="timeline">`;
+                gameState.timeline.forEach((node, idx) => {
+                    let cls = 'timeline-dot';
+                    if (node.lucky) cls += ' lucky';
+                    else if (node.success) cls += ' success';
+                    else cls += ' failure';
+                    html += `<div class="${cls}" onclick="window.__lookBack(${idx})">${idx+1}</div>`;
+                });
+                html += `</div>`;
+            }
+
+            if (gameState.gameEnded) {
+                html += renderEnding();
+            } else if (gameState.showingNewLife) {
+                html += renderNewLife();
+            } else {
+                html += renderStory();
+            }
+        }
+
+        root.innerHTML = html;
+        bindEvents();
+    }
+
+    function renderWelcome() {
+        let html = `
+            <div class="welcome-screen">
+                <div class="welcome-title">PIXEL LIFE</div>
+                <div class="welcome-subtitle">SELECT YOUR FORM</div>
+                <div class="memory-grid">
+        `;
+
+        const startForms = [
+            FORMS.SCHOLAR, FORMS.ARTIST, FORMS.POET,
+            FORMS.CAT, FORMS.DOG, FORMS.RABBIT, FORMS.SQUIRREL, FORMS.SWALLOW,
+            FORMS.STREAM, FORMS.STONE, FORMS.CLOUD, FORMS.TREE, FORMS.FLOWER, FORMS.MOON,
+            FORMS.MAHJONG, FORMS.BEAT, FORMS.MELODY, FORMS.DISCO,
+            FORMS.FAIRY, FORMS.STAR
+        ];
+
+        startForms.forEach(formId => {
+            const form = formsDatabase[formId];
+            if (form) {
+                html += `
+                    <div class="memory-card" data-form="${formId}" style="cursor: pointer;">
+                        <div class="emoji">${form.emoji}</div>
+                        <div class="name">${form.name}</div>
+                        <div class="desc">${form.description.substring(0, 30)}...</div>
+                    </div>
+                `;
+            }
+        });
+
+        html += `</div>`;
+        if (!gameState.audioEnabled) {
+            html += `<button class="primary" onclick="window.__enableAudio()" style="margin-top: 20px;">🎵 开启DISCO</button>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    function renderStory() {
+        const currentStory = getCurrentStory();
+        if (!currentStory) {
+            return `<div class="story-card">🌱 故事已尽，可开启新程</div>`;
+        }
+
+        let html = `
+            <div class="story-card">
+                <div class="story-title">${currentStory.title}</div>
+                <div class="story-desc">${currentStory.desc}</div>
+                <div class="choices-area">
+        `;
+        
+        currentStory.paths.forEach((path, idx) => {
+            html += `
+                <button class="choice-btn" data-choice-index="${idx}">
+                    ${path.text}
+                </button>
+            `;
+        });
+        
+        html += `</div>`;
+
+        if (gameState.pendingDice) {
+            let luckyText = '';
+            if (gameState.pendingDice.lucky) luckyText = '✨ LUCKY!';
+            
+            html += `
+                <div class="dice-result">
+                    <div>🎲 ${gameState.pendingDice.finalDice} + ${gameState.pendingDice.bonus}</div>
+                    <div class="dice-number">${gameState.pendingDice.total}</div>
+                    <div>NEED ${gameState.pendingDice.difficulty}</div>
+                    <div style="font-size:14px; margin-top: 8px;">${luckyText} ${gameState.pendingDice.text}</div>
+                    <div style="margin-top: 4px;">${gameState.pendingDice.exp > 0 ? '+' + gameState.pendingDice.exp + 'exp' : ''}</div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                gameState.pendingDice = null;
+                render();
+            }, 3000);
+        }
+
+        html += `</div>`;
+        return html;
+    }
+
+    function renderNewLife() {
+        let html = `
+            <div class="memory-screen">
+                <h2 style="color:#ffff00; font-size:16px; margin-top:0;">✨ NEW LIFE ✨</h2>
+                <p style="color:#00ffff; font-size:10px;">Choose your next form</p>
+                <div class="memory-grid">
+        `;
+
+        gameState.newLifeOptions.forEach(opt => {
+            let cardClass = 'memory-card';
+            if (!opt.available) cardClass += ' locked';
+            if (gameState.selectedForm === opt.formId) cardClass += ' selected';
+
+            html += `
+                <div class="${cardClass}" data-form="${opt.formId}" style="cursor: pointer;">
+                    <div class="emoji">${opt.emoji}</div>
+                    <div class="name">${opt.name}</div>
+                    <div class="desc">${opt.desc.substring(0, 25)}...</div>
+                    ${!opt.available ? '<div style="color:#ff00ff; font-size:8px; margin-top:4px;">🔒 LOCKED</div>' : ''}
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        html += `<button class="primary" id="confirmNewLifeBtn" ${gameState.selectedForm ? '' : 'disabled'}>🌸 新生</button>`;
+        html += `<button class="secondary" onclick="window.__hideNewLife()">⏳ 稍后</button>`;
+        html += `</div>`;
+        return html;
+    }
+
+    function renderEnding() {
+        return `
+            <div class="story-card" style="text-align: center;">
+                <div class="story-title" style="color: #ff00ff;">✨ GAME OVER ✨</div>
+                <div class="dice-result" style="border-color: #ff00ff;">
+                    ${gameState.endingMessage || 'See you next time!'}
+                </div>
+                <button class="primary" onclick="location.reload()">🌸 RESTART</button>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // 事件绑定
+    // ============================================================
+    function bindEvents() {
+        document.querySelectorAll('[data-form]').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const formId = card.dataset.form;
+                if (gameState.showWelcome) {
+                    startNewGame(formId);
+                } else {
+                    const opt = gameState.newLifeOptions?.find(o => o.formId === formId);
+                    if (opt && opt.available) {
+                        gameState.selectedForm = formId;
+                        render();
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = e.currentTarget.dataset.choiceIndex;
+                if (idx !== undefined) handleChoice(parseInt(idx));
+            });
+        });
+
+        const confirmBtn = document.getElementById('confirmNewLifeBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                if (gameState.selectedForm) {
+                    startNewLife(gameState.selectedForm);
+                }
+            });
+        }
+    }
+
+    // 全局函数
+    window.__hideNewLife = function() {
+        gameState.showingNewLife = false;
+        render();
+    };
+
+    window.__lookBack = function(index) {
+        lookBack(index);
+    };
+
+    window.__enableAudio = function() {
+        enableAudio();
+    };
+
+    // 启动
+    render();
+})();
+</script>
+</body>
+</html>
